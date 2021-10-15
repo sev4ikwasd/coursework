@@ -1,9 +1,17 @@
 package ru.miit.coursework;
 
+import javafx.scene.paint.Color;
+
 public class StringCell extends AbstractCell {
     private String content;
 
     public StringCell(String content) {
+        super(Color.BLACK, Color.WHITE);
+        this.content = content;
+    }
+
+    public StringCell(Color textColor, Color backgroundColor, String content) {
+        super(textColor, backgroundColor);
         this.content = content;
     }
 
@@ -14,6 +22,6 @@ public class StringCell extends AbstractCell {
 
     @Override
     public void setValue(Object value) {
-        content = value.toString();
+        content = value == null ? "" : value.toString();
     }
 }
