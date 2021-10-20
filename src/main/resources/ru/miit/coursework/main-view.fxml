@@ -1,20 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.ColorPicker?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ToolBar?>
-<?import javafx.scene.layout.GridPane?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.paint.Color?>
 <?import org.controlsfx.control.spreadsheet.SpreadsheetView?>
-
-<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="ru.miit.coursework.MainController">
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="ru.miit.coursework.MainController">
     <ToolBar>
-        <GridPane>
-            <Label GridPane.rowIndex="0" GridPane.columnIndex="0" text="Text color:"/>
-            <ColorPicker GridPane.rowIndex="1" GridPane.columnIndex="0" onAction="#textColorPickerAction" fx:id="textColorPicker"/>
-            <Label GridPane.rowIndex="0" GridPane.columnIndex="1" text="Background color:"/>
-            <ColorPicker GridPane.rowIndex="1" GridPane.columnIndex="1" onAction="#backgroundColorPickerAction" fx:id="backgroundColorPicker"/>
+        <GridPane hgap="16">
+            <Label GridPane.rowIndex="0" GridPane.columnIndex="0" text="Current cell type:"/>
+            <Label GridPane.rowIndex="1" GridPane.columnIndex="0" fx:id="cellTypeLabel"/>
+            <Label GridPane.rowIndex="0" GridPane.columnIndex="1" text="Set cell type:"/>
+            <ChoiceBox GridPane.rowIndex="1" GridPane.columnIndex="1" onAction="#cellTypePickerAction"
+                       fx:id="cellTypePicker"/>
+            <Label GridPane.rowIndex="0" GridPane.columnIndex="2" text="Text color:"/>
+            <ColorPicker GridPane.rowIndex="1" GridPane.columnIndex="2" onAction="#textColorPickerAction"
+                         fx:id="textColorPicker">
+                <!-- Set default color to black -->
+                <value>
+                    <Color/>
+                </value>
+            </ColorPicker>
+            <Label GridPane.rowIndex="0" GridPane.columnIndex="3" text="Background color:"/>
+            <ColorPicker GridPane.rowIndex="1" GridPane.columnIndex="3" onAction="#backgroundColorPickerAction"
+                         fx:id="backgroundColorPicker"/>
         </GridPane>
     </ToolBar>
-    <SpreadsheetView fx:id="spreadsheet" />
+    <SpreadsheetView fx:id="spreadsheet"/>
 </VBox>
