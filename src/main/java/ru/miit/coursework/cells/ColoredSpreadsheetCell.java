@@ -11,4 +11,6 @@ public interface ColoredSpreadsheetCell extends SpreadsheetCell {
     Color getBackgroundColor();
 
     void setBackgroundColor(Color color);
+
+    boolean coloredEquals(Object obj);
 }

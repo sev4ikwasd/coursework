@@ -2,29 +2,32 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.paint.Color?>
 <?import org.controlsfx.control.spreadsheet.SpreadsheetView?>
 <VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
       fx:controller="ru.miit.coursework.MainController">
+    <MenuBar>
+        <Menu text="File">
+            <MenuItem text="New" onAction="#newSpreadsheetMenuEntryAction"/>
+            <MenuItem text="Open" onAction="#openSpreadsheetMenuEntryAction"/>
+            <MenuItem text="Save" onAction="#saveSpreadsheetMenuEntryAction"/>
+            <MenuItem text="Save as" onAction="#saveAsSpreadsheetMenuEntryAction"/>
+            <MenuItem text="Print" onAction="#printSpreadsheetMenuEntryAction"/>
+            <MenuItem text="Exit" onAction="#exitSpreadsheetMenuEntryAction"/>
+        </Menu>
+    </MenuBar>
     <ToolBar>
         <GridPane hgap="16">
-            <Label GridPane.rowIndex="0" GridPane.columnIndex="0" text="Current cell type:"/>
-            <Label GridPane.rowIndex="1" GridPane.columnIndex="0" fx:id="cellTypeLabel"/>
-            <Label GridPane.rowIndex="0" GridPane.columnIndex="1" text="Set cell type:"/>
-            <ChoiceBox GridPane.rowIndex="1" GridPane.columnIndex="1" onAction="#cellTypePickerAction"
+            <Label GridPane.rowIndex="0" GridPane.columnIndex="0" text="Cell type:"/>
+            <ChoiceBox GridPane.rowIndex="1" GridPane.columnIndex="0" onAction="#cellTypePickerAction"
                        fx:id="cellTypePicker"/>
-            <Label GridPane.rowIndex="0" GridPane.columnIndex="2" text="Text color:"/>
-            <ColorPicker GridPane.rowIndex="1" GridPane.columnIndex="2" onAction="#textColorPickerAction"
+            <Label GridPane.rowIndex="0" GridPane.columnIndex="1" text="Text color:"/>
+            <ColorPicker GridPane.rowIndex="1" GridPane.columnIndex="1" onAction="#textColorPickerAction"
                          fx:id="textColorPicker">
-                <!-- Set default color to black -->
-                <value>
-                    <Color/>
-                </value>
             </ColorPicker>
-            <Label GridPane.rowIndex="0" GridPane.columnIndex="3" text="Background color:"/>
-            <ColorPicker GridPane.rowIndex="1" GridPane.columnIndex="3" onAction="#backgroundColorPickerAction"
+            <Label GridPane.rowIndex="0" GridPane.columnIndex="2" text="Background color:"/>
+            <ColorPicker GridPane.rowIndex="1" GridPane.columnIndex="2" onAction="#backgroundColorPickerAction"
                          fx:id="backgroundColorPicker"/>
         </GridPane>
     </ToolBar>
-    <SpreadsheetView fx:id="spreadsheet"/>
+    <SpreadsheetView fx:id="spreadsheet" VBox.vgrow="ALWAYS"/>
 </VBox>

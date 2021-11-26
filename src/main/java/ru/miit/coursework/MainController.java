@@ -1,16 +1,16 @@
 package ru.miit.coursework;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.ColorPicker;
-import javafx.scene.control.Label;
-import javafx.scene.control.TablePosition;
+import javafx.scene.control.*;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
+import javafx.stage.FileChooser;
 import org.controlsfx.control.spreadsheet.GridBase;
 import org.controlsfx.control.spreadsheet.SpreadsheetCell;
 import org.controlsfx.control.spreadsheet.SpreadsheetCellType;
@@ -19,10 +19,14 @@ import ru.miit.coursework.cells.ColoredDoubleCellType;
 import ru.miit.coursework.cells.ColoredIntegerCellType;
 import ru.miit.coursework.cells.ColoredSpreadsheetCell;
 import ru.miit.coursework.cells.ColoredStringCellType;
+import ru.miit.coursework.spreadsheet_model.Cell;
+import ru.miit.coursework.spreadsheet_model.Spreadsheet;
+import ru.miit.coursework.spreadsheet_model.SpreadsheetSerializationService;
+import ru.miit.coursework.spreadsheet_model.SpreadsheetSerializationServiceInterface;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.TreeMap;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -41,11 +45,10 @@ public class MainController {
     private GridBase grid;
     private ObservableList<ObservableList<SpreadsheetCell>> spreadsheetContent;
 
-    @FXML
-    SpreadsheetView spreadsheet;
+    private SpreadsheetSerializationServiceInterface spreadsheetSerializationService;
 
     @FXML
-    Label cellTypeLabel;
+    SpreadsheetView spreadsheet;
 
     @FXML
     ChoiceBox<String> cellTypePicker;
@@ -57,17 +60,28 @@ public class MainController {
     ColorPicker backgroundColorPicker;
 
     public void initialize() {
+        spreadsheetSerializationService = new SpreadsheetSerializationService();
+
         createSpreadsheetContent();
         //Events to update color pickers to represent colors of cells
         spreadsheet.addEventFilter(KeyEvent.KEY_RELEASED, keyEvent -> updatePickers());
         spreadsheet.addEventFilter(MouseEvent.MOUSE_CLICKED, keyEvent -> updatePickers());
 
+        cellTypePicker.getItems().clear();
         cellTypePicker.getItems().addAll(typeNameToSpreadsheetCellTypeMapper.keySet().stream().sorted(Collections.reverseOrder()).toList());
-        cellTypePicker.setValue("String");
+        changeTypePickerValueSilently(null);
+
+        textColorPicker.setValue(Color.BLACK);
+        backgroundColorPicker.setValue(Color.WHITE);
     }
 
     private void createSpreadsheetContent() {
         grid = new GridBase(initialRowCount, initialColumnCount);
+        populateSpreadsheet();
+        spreadsheet.setGrid(grid);
+    }
+
+    private void populateSpreadsheet() {
         spreadsheetContent = FXCollections.observableArrayList();
         for (int i = 0; i < grid.getRowCount(); i++) {
             ObservableList<SpreadsheetCell> row = FXCollections.observableArrayList();
@@ -78,8 +92,109 @@ public class MainController {
             spreadsheetContent.add(row);
         }
         grid.setRows(spreadsheetContent);
-        spreadsheet.setGrid(grid);
     }
+
+    //Menus
+
+    @FXML
+    public void newSpreadsheetMenuEntryAction(ActionEvent event) {
+        populateSpreadsheet();
+
+        textColorPicker.setValue(Color.BLACK);
+        backgroundColorPicker.setValue(Color.WHITE);
+    }
+
+    @FXML
+    public void openSpreadsheetMenuEntryAction(ActionEvent event) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Open spreadsheet");
+        File file = fileChooser.showOpenDialog(MainApplication.getPrimaryStage());
+        if(file != null) {
+            try {
+                Spreadsheet spreadsheet = spreadsheetSerializationService.openSpreadsheet(file);
+                convertFromSpreadsheet(spreadsheet);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+                //TODO proper exception handling
+            }
+        }
+    }
+
+    private void convertFromSpreadsheet(Spreadsheet spreadsheet) {
+        //TODO add resizing
+        populateSpreadsheet();
+        for (Cell cell : spreadsheet.getCells()) {
+            ColoredSpreadsheetCell contentCell = null;
+            switch (cell.getType()) {
+                case STRING -> contentCell = (new ColoredStringCellType()).createCell(cell.getX(), cell.getY(), 1, 1, (String) cell.getValue());
+                case INTEGER -> contentCell = (new ColoredIntegerCellType()).createCell(cell.getX(), cell.getY(), 1, 1, (Integer) cell.getValue());
+                case DOUBLE -> contentCell = (new ColoredDoubleCellType()).createCell(cell.getX(), cell.getY(), 1, 1, (Double) cell.getValue());
+            }
+            contentCell.setBackgroundColor(Color.valueOf(cell.getBackgroundColor()));
+            contentCell.setTextColor(Color.valueOf(cell.getTextColor()));
+            spreadsheetContent.get(cell.getX()).set(cell.getY(), contentCell);
+        }
+    }
+
+    @FXML
+    public void saveSpreadsheetMenuEntryAction(ActionEvent event) {
+        try {
+            spreadsheetSerializationService.saveSpreadsheet(convertSpreadsheet());
+        } catch (Exception e) {
+            saveAsSpreadsheetMenuEntryAction(event);
+        }
+    }
+
+    @FXML
+    public void saveAsSpreadsheetMenuEntryAction(ActionEvent event) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save spreadsheet");
+        fileChooser.setInitialFileName("spreadsheet.spr");
+        File file = fileChooser.showSaveDialog(MainApplication.getPrimaryStage());
+        if(file != null) {
+            try {
+                spreadsheetSerializationService.saveSpreadsheet(file, convertSpreadsheet());
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+                //TODO proper exception handling
+            }
+        }
+    }
+
+    private Spreadsheet convertSpreadsheet() {
+        List<Cell> cells = new ArrayList<>();
+        for (int i = 0; i < grid.getRowCount(); i++) {
+            for (int j = 0; j < grid.getColumnCount(); j++) {
+                ColoredSpreadsheetCell cell = (ColoredSpreadsheetCell) spreadsheetContent.get(i).get(j);
+                // Prevents from saving default cells
+                if(!cell.coloredEquals((new ColoredStringCellType()).createCell(i, j, 1, 1, ""))) {
+                    Cell.Type type = null;
+                    if (cell.getCellType() instanceof ColoredStringCellType)
+                        type = Cell.Type.STRING;
+                    else if (cell.getCellType() instanceof ColoredIntegerCellType)
+                        type = Cell.Type.INTEGER;
+                    else if (cell.getCellType() instanceof ColoredDoubleCellType)
+                        type = Cell.Type.DOUBLE;
+
+                    cells.add(new Cell(i, j, cell.getBackgroundColor().toString(), cell.getTextColor().toString(),
+                            type, cell.getItem()));
+                }
+            }
+        }
+        return new Spreadsheet(cells);
+    }
+
+    @FXML
+    public void printSpreadsheetMenuEntryAction(ActionEvent event) {
+
+    }
+
+    @FXML
+    public void exitSpreadsheetMenuEntryAction(ActionEvent event) {
+        Platform.exit();
+    }
+
+    //Toolbars
 
     private void updatePickers() {
         ObservableList<TablePosition> selectedPosition = spreadsheet.getSelectionModel().getSelectedCells();
@@ -99,8 +214,8 @@ public class MainController {
                     break;
                 }
             }
-            if (!cellsTypeEqual) cellTypeLabel.setText(null);
-            else cellTypeLabel.setText(spreadsheetCellTypeToTypeNameMapper.get(firstCellType));
+            if (!cellsTypeEqual) changeTypePickerValueSilently(null);
+            else changeTypePickerValueSilently(spreadsheetCellTypeToTypeNameMapper.get(firstCellType));
 
             //Color pickers
             boolean cellsTextColorEqual = true;
@@ -141,7 +256,7 @@ public class MainController {
             column = selectedPosition.get(0).getColumn();
 
             //Type selector
-            cellTypeLabel.setText(spreadsheetCellTypeToTypeNameMapper.get(spreadsheetContent.get(row).get(column).getCellType().getClass()));
+            changeTypePickerValueSilently(spreadsheetCellTypeToTypeNameMapper.get(spreadsheetContent.get(row).get(column).getCellType().getClass()));
 
             //Color pickers
             textColorPicker.setValue(((ColoredSpreadsheetCell) spreadsheetContent.get(row).get(column)).getTextColor());
@@ -174,7 +289,7 @@ public class MainController {
                         int newValue = 0;
                         try {
                             newValue = (int) Double.parseDouble(oldCell.getItem().toString());
-                        } catch (NumberFormatException ignored) {
+                        } catch (NumberFormatException | NullPointerException ignored) {
                         }
                         ColoredSpreadsheetCell newCell = (new ColoredIntegerCellType()).createCell(row, column, 1, 1, newValue);
                         newCell.setTextColor(textColor);
@@ -186,7 +301,7 @@ public class MainController {
                         double newValue = 0.0;
                         try {
                             newValue = Double.parseDouble(oldCell.getItem().toString());
-                        } catch (NumberFormatException ignored) {
+                        } catch (NumberFormatException | NullPointerException ignored) {
                         }
                         ColoredSpreadsheetCell newCell = (new ColoredDoubleCellType()).createCell(row, column, 1, 1, newValue);
                         newCell.setTextColor(textColor);
@@ -195,8 +310,18 @@ public class MainController {
                     }
                 }
             }
-            cellTypeLabel.setText(value);
+            Platform.runLater(() -> {
+                changeTypePickerValueSilently(value);
+            });
         }
+    }
+
+    //Hackish way to change the value of picker without triggering ActionEvent
+    private void changeTypePickerValueSilently(String value) {
+        EventHandler<ActionEvent> handler = cellTypePicker.getOnAction();
+        cellTypePicker.setOnAction(null);
+        cellTypePicker.setValue(value);
+        cellTypePicker.setOnAction(handler);
     }
 
     @FXML
