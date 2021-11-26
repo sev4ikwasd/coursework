@@ -9,15 +9,18 @@ public class ColoredSpreadsheetCellBase extends SpreadsheetCellBase implements C
     private Color backgroundColor;
 
     public ColoredSpreadsheetCellBase(int row, int column, int rowSpan, int columnSpan) {
-        super(row, column, rowSpan, columnSpan);
-        textColor = Color.BLACK;
-        backgroundColor = Color.WHITE;
+        this(row, column, rowSpan, columnSpan, SpreadsheetCellType.OBJECT);
     }
 
     public ColoredSpreadsheetCellBase(int row, int column, int rowSpan, int columnSpan, SpreadsheetCellType<?> type) {
         super(row, column, rowSpan, columnSpan, type);
+        initColors();
+    }
+
+    private void initColors() {
         textColor = Color.BLACK;
         backgroundColor = Color.WHITE;
+        updateCssColor();
     }
 
     @Override
@@ -28,12 +31,7 @@ public class ColoredSpreadsheetCellBase extends SpreadsheetCellBase implements C
     @Override
     public void setTextColor(Color textColor) {
         this.textColor = textColor;
-        String stringBackgroundColor = backgroundColor.toString();
-        stringBackgroundColor = "#" + stringBackgroundColor.substring(2);
-        String stringTextColor = textColor.toString();
-        stringTextColor = "#" + stringTextColor.substring(2);
-        this.setStyle("-fx-background-color: " + stringBackgroundColor + "; " +
-                "-fx-text-fill: " + stringTextColor + ";");
+        updateCssColor();
     }
 
     @Override
@@ -44,11 +42,26 @@ public class ColoredSpreadsheetCellBase extends SpreadsheetCellBase implements C
     @Override
     public void setBackgroundColor(Color backgroundColor) {
         this.backgroundColor = backgroundColor;
+        updateCssColor();
+    }
+
+    private void updateCssColor() {
         String stringBackgroundColor = backgroundColor.toString();
         stringBackgroundColor = "#" + stringBackgroundColor.substring(2);
         String stringTextColor = textColor.toString();
         stringTextColor = "#" + stringTextColor.substring(2);
         this.setStyle("-fx-background-color: " + stringBackgroundColor + "; " +
                 "-fx-text-fill: " + stringTextColor + ";");
+    }
+
+    @Override
+    public boolean coloredEquals(Object obj) {
+        if(this.equals(obj)) {
+            if(obj instanceof ColoredSpreadsheetCellBase){
+                return this.backgroundColor.equals(((ColoredSpreadsheetCellBase) obj).getBackgroundColor())
+                        && this.textColor.equals(((ColoredSpreadsheetCellBase) obj).getTextColor());
+            }
+        }
+        return false;
     }
 }
