@@ -3,7 +3,6 @@ package ru.miit.coursework;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.collections.ObservableSet;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -63,6 +62,10 @@ public class MainController {
     ColorPicker backgroundColorPicker;
 
     public void initialize() {
+        MainApplication.getPrimaryStage().setOnCloseRequest((e) -> {
+            unsavedChangesAlert(new ActionEvent(), () -> {});
+        });
+
         spreadsheetSerializationService = new SpreadsheetSerializationService();
 
         createSpreadsheetContent();
@@ -101,26 +104,30 @@ public class MainController {
 
     @FXML
     public void newSpreadsheetMenuEntryAction(ActionEvent event) {
-        populateSpreadsheet();
+        unsavedChangesAlert(event, () -> {
+            populateSpreadsheet();
 
-        textColorPicker.setValue(Color.BLACK);
-        backgroundColorPicker.setValue(Color.WHITE);
+            textColorPicker.setValue(Color.BLACK);
+            backgroundColorPicker.setValue(Color.WHITE);
+        });
     }
 
     @FXML
     public void openSpreadsheetMenuEntryAction(ActionEvent event) {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Open spreadsheet");
-        File file = fileChooser.showOpenDialog(MainApplication.getPrimaryStage());
-        if(file != null) {
-            try {
-                Spreadsheet spreadsheet = spreadsheetSerializationService.openSpreadsheet(file);
-                convertFromSpreadsheet(spreadsheet);
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-                //TODO proper exception handling
+        unsavedChangesAlert(event, () -> {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Open spreadsheet");
+            File file = fileChooser.showOpenDialog(MainApplication.getPrimaryStage());
+            if(file != null) {
+                try {
+                    Spreadsheet spreadsheet = spreadsheetSerializationService.openSpreadsheet(file);
+                    convertFromSpreadsheet(spreadsheet);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                    //TODO proper exception handling
+                }
             }
-        }
+        });
     }
 
     private void convertFromSpreadsheet(Spreadsheet spreadsheet) {
@@ -199,7 +206,50 @@ public class MainController {
 
     @FXML
     public void exitSpreadsheetMenuEntryAction(ActionEvent event) {
-        Platform.exit();
+        unsavedChangesAlert(event, Platform::exit);
+    }
+
+    private void unsavedChangesAlert(ActionEvent event, DontSaveCallback callback) {
+        if (!isSpreadsheetDefault()) {
+            Alert unsavedAlert = new Alert(Alert.AlertType.CONFIRMATION);
+            unsavedAlert.setTitle("Save document?");
+            unsavedAlert.setHeaderText("Save changes in document?");
+            unsavedAlert.setContentText("Your changes will be lost if you don't save them");
+            ButtonType save = new ButtonType("Save");
+            ButtonType dontSave = new ButtonType("Don't save");
+            ButtonType cancel = new ButtonType("Cancel");
+            unsavedAlert.getButtonTypes().setAll(save, dontSave, cancel);
+            Optional<ButtonType> result = unsavedAlert.showAndWait();
+            if (result.isPresent()) {
+                ButtonType buttonType = result.get();
+                if (save.equals(buttonType)) {
+                    saveSpreadsheetMenuEntryAction(event);
+                    callback.action();
+                }
+                else if (dontSave.equals(buttonType)) {
+                    callback.action();
+                }
+            }
+        }
+        else {
+            callback.action();
+        }
+    }
+
+    private interface DontSaveCallback {
+        void action();
+    }
+
+    private boolean isSpreadsheetDefault() {
+        for (int i = 0; i < grid.getRowCount(); i++) {
+            for (int j = 0; j < grid.getColumnCount(); j++) {
+                if (!((ColoredSpreadsheetCell) spreadsheetContent.get(i).get(j)).coloredEquals(
+                        (new ColoredStringCellType()).createCell(i, j, 1, 1, ""))) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     //Toolbars
