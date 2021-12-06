@@ -3,9 +3,12 @@ package ru.miit.coursework;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableSet;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.print.Printer;
+import javafx.print.PrinterJob;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
@@ -186,7 +189,12 @@ public class MainController {
 
     @FXML
     public void printSpreadsheetMenuEntryAction(ActionEvent event) {
-
+        // For some reason PrinterJob can be created only when printer is given or default printer exists, but if there
+        // is no default printer createPrinterJob() returns null, and you can't even get to showPrintDialog to choose one.
+        Printer printer = Printer.getDefaultPrinter() == null ? (Printer) Printer.getAllPrinters().toArray()[0] : Printer.getDefaultPrinter();
+        PrinterJob job = PrinterJob.createPrinterJob(printer);
+        job.showPrintDialog(MainApplication.getPrimaryStage());
+        job.printPage(spreadsheet);
     }
 
     @FXML
