@@ -56,8 +56,8 @@ public class ColoredSpreadsheetCellBase extends SpreadsheetCellBase implements C
 
     @Override
     public boolean coloredEquals(Object obj) {
-        if(this.equals(obj)) {
-            if(obj instanceof ColoredSpreadsheetCellBase){
+        if (this.equals(obj)) {
+            if (obj instanceof ColoredSpreadsheetCellBase) {
                 return this.backgroundColor.equals(((ColoredSpreadsheetCellBase) obj).getBackgroundColor())
                         && this.textColor.equals(((ColoredSpreadsheetCellBase) obj).getTextColor());
             }
