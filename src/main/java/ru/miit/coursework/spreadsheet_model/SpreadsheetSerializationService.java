@@ -10,8 +10,7 @@ public class SpreadsheetSerializationService implements SpreadsheetSerialization
     public void saveSpreadsheet(Spreadsheet spreadsheet) throws Exception {
         if (currentSaveFile != null) {
             saveSpreadsheet(currentSaveFile, spreadsheet);
-        }
-        else {
+        } else {
             throw new Exception("No current save file");
         }
     }

@@ -13,10 +13,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
-import org.controlsfx.control.spreadsheet.GridBase;
-import org.controlsfx.control.spreadsheet.SpreadsheetCell;
-import org.controlsfx.control.spreadsheet.SpreadsheetCellType;
-import org.controlsfx.control.spreadsheet.SpreadsheetView;
+import org.controlsfx.control.spreadsheet.*;
 import ru.miit.coursework.cells.ColoredDoubleCellType;
 import ru.miit.coursework.cells.ColoredIntegerCellType;
 import ru.miit.coursework.cells.ColoredSpreadsheetCell;
@@ -49,6 +46,8 @@ public class MainController {
 
     private SpreadsheetSerializationServiceInterface spreadsheetSerializationService;
 
+    private boolean isChanged = false;
+
     @FXML
     SpreadsheetView spreadsheet;
 
@@ -62,8 +61,13 @@ public class MainController {
     ColorPicker backgroundColorPicker;
 
     public void initialize() {
-        MainApplication.getPrimaryStage().setOnCloseRequest((e) -> {
-            unsavedChangesAlert(new ActionEvent(), () -> {});
+        MainApplication.getPrimaryStage().setOnCloseRequest(event -> {
+            unsavedChangesAlert(new ActionEvent(), () -> {
+            });
+        });
+
+        Platform.runLater(() -> {
+            MainApplication.getPrimaryStage().setTitle("untitled - Spreadsheets");
         });
 
         spreadsheetSerializationService = new SpreadsheetSerializationService();
@@ -72,6 +76,9 @@ public class MainController {
         //Events to update color pickers to represent colors of cells
         spreadsheet.addEventFilter(KeyEvent.KEY_RELEASED, keyEvent -> updatePickers());
         spreadsheet.addEventFilter(MouseEvent.MOUSE_CLICKED, keyEvent -> updatePickers());
+        grid.addEventHandler(GridChange.GRID_CHANGE_EVENT, event -> {
+            isChanged = true;
+        });
 
         cellTypePicker.getItems().clear();
         cellTypePicker.getItems().addAll(typeNameToSpreadsheetCellTypeMapper.keySet().stream().sorted(Collections.reverseOrder()).toList());
@@ -118,13 +125,13 @@ public class MainController {
             FileChooser fileChooser = new FileChooser();
             fileChooser.setTitle("Open spreadsheet");
             File file = fileChooser.showOpenDialog(MainApplication.getPrimaryStage());
-            if(file != null) {
+            if (file != null) {
                 try {
                     Spreadsheet spreadsheet = spreadsheetSerializationService.openSpreadsheet(file);
                     convertFromSpreadsheet(spreadsheet);
+                    MainApplication.getPrimaryStage().setTitle(file.getName() + " - Spreadsheets");
                 } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                    //TODO proper exception handling
+                    alertErrorHasOccured(false);
                 }
             }
         });
@@ -150,6 +157,7 @@ public class MainController {
     public void saveSpreadsheetMenuEntryAction(ActionEvent event) {
         try {
             spreadsheetSerializationService.saveSpreadsheet(convertSpreadsheet());
+            isChanged = false;
         } catch (Exception e) {
             saveAsSpreadsheetMenuEntryAction(event);
         }
@@ -161,14 +169,24 @@ public class MainController {
         fileChooser.setTitle("Save spreadsheet");
         fileChooser.setInitialFileName("spreadsheet.spr");
         File file = fileChooser.showSaveDialog(MainApplication.getPrimaryStage());
-        if(file != null) {
+        if (file != null) {
             try {
                 spreadsheetSerializationService.saveSpreadsheet(file, convertSpreadsheet());
+                MainApplication.getPrimaryStage().setTitle(file.getName() + " - Spreadsheets");
+                isChanged = false;
             } catch (FileNotFoundException e) {
-                e.printStackTrace();
-                //TODO proper exception handling
+                alertErrorHasOccured(true);
             }
         }
+    }
+
+    void alertErrorHasOccured(boolean isWhileSaving) {
+        Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+        errorAlert.setTitle("Error!");
+        errorAlert.setHeaderText("Error has occured!");
+        String text = isWhileSaving ? "Error has occurred while saving file!" : "Error has occurred while opening file!";
+        errorAlert.setContentText(text);
+        errorAlert.show();
     }
 
     private Spreadsheet convertSpreadsheet() {
@@ -177,7 +195,7 @@ public class MainController {
             for (int j = 0; j < grid.getColumnCount(); j++) {
                 ColoredSpreadsheetCell cell = (ColoredSpreadsheetCell) spreadsheetContent.get(i).get(j);
                 // Prevents from saving default cells
-                if(!cell.coloredEquals((new ColoredStringCellType()).createCell(i, j, 1, 1, ""))) {
+                if (!cell.coloredEquals((new ColoredStringCellType()).createCell(i, j, 1, 1, ""))) {
                     Cell.Type type = null;
                     if (cell.getCellType() instanceof ColoredStringCellType)
                         type = Cell.Type.STRING;
@@ -210,7 +228,7 @@ public class MainController {
     }
 
     private void unsavedChangesAlert(ActionEvent event, DontSaveCallback callback) {
-        if (!isSpreadsheetDefault()) {
+        if (!isSpreadsheetDefault() && isChanged) {
             Alert unsavedAlert = new Alert(Alert.AlertType.CONFIRMATION);
             unsavedAlert.setTitle("Save document?");
             unsavedAlert.setHeaderText("Save changes in document?");
@@ -225,13 +243,11 @@ public class MainController {
                 if (save.equals(buttonType)) {
                     saveSpreadsheetMenuEntryAction(event);
                     callback.action();
-                }
-                else if (dontSave.equals(buttonType)) {
+                } else if (dontSave.equals(buttonType)) {
                     callback.action();
                 }
             }
-        }
-        else {
+        } else {
             callback.action();
         }
     }

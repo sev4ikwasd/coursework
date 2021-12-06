@@ -23,7 +23,7 @@ public class MainApplication extends Application {
         setPrimaryStage(stage);
         FXMLLoader fxmlLoader = new FXMLLoader(MainApplication.class.getResource("main-view.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 740, 480);
-        stage.setTitle("Main");
+        stage.setTitle("Spreadsheets");
         stage.setScene(scene);
         stage.show();
     }

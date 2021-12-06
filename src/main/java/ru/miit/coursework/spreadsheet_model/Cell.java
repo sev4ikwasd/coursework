@@ -1,7 +1,5 @@
 package ru.miit.coursework.spreadsheet_model;
 
-import javafx.scene.paint.Color;
-
 public class Cell {
     private int x, y;
     private String backgroundColor, textColor;
