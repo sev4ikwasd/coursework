@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import org.controlsfx.control.spreadsheet.SpreadsheetView?>
@@ -15,19 +16,27 @@
             <MenuItem text="Exit" onAction="#exitSpreadsheetMenuEntryAction"/>
         </Menu>
     </MenuBar>
-    <ToolBar>
-        <GridPane hgap="16">
-            <Label GridPane.rowIndex="0" GridPane.columnIndex="0" text="Cell type:"/>
-            <ChoiceBox GridPane.rowIndex="1" GridPane.columnIndex="0" onAction="#cellTypePickerAction"
-                       fx:id="cellTypePicker"/>
-            <Label GridPane.rowIndex="0" GridPane.columnIndex="1" text="Text color:"/>
-            <ColorPicker GridPane.rowIndex="1" GridPane.columnIndex="1" onAction="#textColorPickerAction"
-                         fx:id="textColorPicker">
-            </ColorPicker>
-            <Label GridPane.rowIndex="0" GridPane.columnIndex="2" text="Background color:"/>
-            <ColorPicker GridPane.rowIndex="1" GridPane.columnIndex="2" onAction="#backgroundColorPickerAction"
-                         fx:id="backgroundColorPicker"/>
-        </GridPane>
-    </ToolBar>
+    <GridPane hgap="16">
+        <Label GridPane.rowIndex="0" GridPane.columnIndex="0" text="Cell type:"/>
+        <ChoiceBox GridPane.rowIndex="1" GridPane.columnIndex="0" onAction="#cellTypePickerAction"
+                   fx:id="cellTypePicker"/>
+        <Label GridPane.rowIndex="0" GridPane.columnIndex="1" text="Text color:"/>
+        <ColorPicker GridPane.rowIndex="1" GridPane.columnIndex="1" onAction="#textColorPickerAction"
+                     fx:id="textColorPicker">
+        </ColorPicker>
+        <Label GridPane.rowIndex="0" GridPane.columnIndex="2" text="Background color:"/>
+        <ColorPicker GridPane.rowIndex="1" GridPane.columnIndex="2" onAction="#backgroundColorPickerAction"
+                     fx:id="backgroundColorPicker"/>
+        <TextField GridPane.rowIndex="2" GridPane.columnIndex="0" GridPane.columnSpan="3" prefWidth="Infinity"
+                   fx:id="inputTextField" onAction="#inputTextFieldAction">
+            <GridPane.margin>
+                <Insets top="8.0"/>
+            </GridPane.margin>
+        </TextField>
+
+        <padding>
+            <Insets bottom="8.0" left="6.0" right="6.0" top="6.0"/>
+        </padding>
+    </GridPane>
     <SpreadsheetView fx:id="spreadsheet" VBox.vgrow="ALWAYS"/>
 </VBox>

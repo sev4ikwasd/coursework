@@ -60,10 +60,12 @@ public class MainController {
     @FXML
     ColorPicker backgroundColorPicker;
 
+    @FXML
+    TextField inputTextField;
+
     public void initialize() {
         MainApplication.getPrimaryStage().setOnCloseRequest(event -> {
-            unsavedChangesAlert(new ActionEvent(), () -> {
-            });
+            if (unsavedChangesAlert(new ActionEvent(), Platform::exit)) event.consume();
         });
 
         Platform.runLater(() -> {
@@ -74,8 +76,8 @@ public class MainController {
 
         createSpreadsheetContent();
         //Events to update color pickers to represent colors of cells
-        spreadsheet.addEventFilter(KeyEvent.KEY_RELEASED, keyEvent -> updatePickers());
-        spreadsheet.addEventFilter(MouseEvent.MOUSE_CLICKED, keyEvent -> updatePickers());
+        spreadsheet.addEventFilter(KeyEvent.KEY_RELEASED, keyEvent -> updateToolbar());
+        spreadsheet.addEventFilter(MouseEvent.MOUSE_CLICKED, keyEvent -> updateToolbar());
         grid.addEventHandler(GridChange.GRID_CHANGE_EVENT, event -> {
             isChanged = true;
         });
@@ -131,14 +133,13 @@ public class MainController {
                     convertFromSpreadsheet(spreadsheet);
                     MainApplication.getPrimaryStage().setTitle(file.getName() + " - Spreadsheets");
                 } catch (FileNotFoundException e) {
-                    alertErrorHasOccured(false);
+                    alertErrorHasOccurred(false);
                 }
             }
         });
     }
 
     private void convertFromSpreadsheet(Spreadsheet spreadsheet) {
-        //TODO add resizing
         populateSpreadsheet();
         for (Cell cell : spreadsheet.getCells()) {
             ColoredSpreadsheetCell contentCell = null;
@@ -175,15 +176,15 @@ public class MainController {
                 MainApplication.getPrimaryStage().setTitle(file.getName() + " - Spreadsheets");
                 isChanged = false;
             } catch (FileNotFoundException e) {
-                alertErrorHasOccured(true);
+                alertErrorHasOccurred(true);
             }
         }
     }
 
-    void alertErrorHasOccured(boolean isWhileSaving) {
+    void alertErrorHasOccurred(boolean isWhileSaving) {
         Alert errorAlert = new Alert(Alert.AlertType.ERROR);
         errorAlert.setTitle("Error!");
-        errorAlert.setHeaderText("Error has occured!");
+        errorAlert.setHeaderText("Error has occurred!");
         String text = isWhileSaving ? "Error has occurred while saving file!" : "Error has occurred while opening file!";
         errorAlert.setContentText(text);
         errorAlert.show();
@@ -227,7 +228,7 @@ public class MainController {
         unsavedChangesAlert(event, Platform::exit);
     }
 
-    private void unsavedChangesAlert(ActionEvent event, DontSaveCallback callback) {
+    private boolean unsavedChangesAlert(ActionEvent event, DontSaveCallback callback) {
         if (!isSpreadsheetDefault() && isChanged) {
             Alert unsavedAlert = new Alert(Alert.AlertType.CONFIRMATION);
             unsavedAlert.setTitle("Save document?");
@@ -247,8 +248,10 @@ public class MainController {
                     callback.action();
                 }
             }
+            return true;
         } else {
             callback.action();
+            return false;
         }
     }
 
@@ -270,7 +273,7 @@ public class MainController {
 
     //Toolbars
 
-    private void updatePickers() {
+    private void updateToolbar() {
         ObservableList<TablePosition> selectedPosition = spreadsheet.getSelectionModel().getSelectedCells();
         int row, column;
         if (selectedPosition.size() > 1) {
@@ -325,6 +328,10 @@ public class MainController {
             if (!cellsBackgroundColorEqual) backgroundColorPicker.setValue(null);
             else backgroundColorPicker.setValue(firstCellBackgroundColor);
 
+            //Input text field
+            row = selectedPosition.get(0).getRow();
+            column = selectedPosition.get(0).getColumn();
+            inputTextField.setText(spreadsheetContent.get(row).get(column).getText());
         } else if (selectedPosition.size() == 1) {
             row = selectedPosition.get(0).getRow();
             column = selectedPosition.get(0).getColumn();
@@ -335,6 +342,9 @@ public class MainController {
             //Color pickers
             textColorPicker.setValue(((ColoredSpreadsheetCell) spreadsheetContent.get(row).get(column)).getTextColor());
             backgroundColorPicker.setValue(((ColoredSpreadsheetCell) spreadsheetContent.get(row).get(column)).getBackgroundColor());
+
+            //Input text field
+            inputTextField.setText(spreadsheetContent.get(row).get(column).getText());
         }
     }
 
@@ -384,9 +394,7 @@ public class MainController {
                     }
                 }
             }
-            Platform.runLater(() -> {
-                changeTypePickerValueSilently(value);
-            });
+            Platform.runLater(() -> changeTypePickerValueSilently(value));
         }
     }
 
@@ -419,6 +427,22 @@ public class MainController {
             row = position.getRow();
             column = position.getColumn();
             ((ColoredSpreadsheetCell) spreadsheetContent.get(row).get(column)).setBackgroundColor(backgroundColor);
+        }
+    }
+
+    @FXML
+    public void inputTextFieldAction(ActionEvent actionEvent) {
+        String text = inputTextField.getText();
+        ObservableList<TablePosition> selectedPositions = spreadsheet.getSelectionModel().getSelectedCells();
+        if (selectedPositions.size() > 0) {
+            TablePosition position = selectedPositions.get(0);
+            int row = position.getRow();
+            int column = position.getColumn();
+            try {
+                spreadsheetContent.get(row).get(column).setItem(text);
+            } catch (Exception exception) {
+                inputTextField.setText(spreadsheetContent.get(row).get(column).getText());
+            }
         }
     }
 }
