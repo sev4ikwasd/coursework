@@ -2,6 +2,7 @@ package ru.miit.coursework;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -75,9 +76,8 @@ public class MainController {
         spreadsheetSerializationService = new SpreadsheetSerializationService();
 
         createSpreadsheetContent();
-        //Events to update color pickers to represent colors of cells
-        spreadsheet.addEventFilter(KeyEvent.KEY_RELEASED, keyEvent -> updateToolbar());
-        spreadsheet.addEventFilter(MouseEvent.MOUSE_CLICKED, keyEvent -> updateToolbar());
+
+        spreadsheet.getSelectionModel().getSelectedCells().addListener((ListChangeListener<TablePosition>) change -> updateToolbar());
         grid.addEventHandler(GridChange.GRID_CHANGE_EVENT, event -> {
             isChanged = true;
         });
@@ -118,6 +118,7 @@ public class MainController {
 
             textColorPicker.setValue(Color.BLACK);
             backgroundColorPicker.setValue(Color.WHITE);
+            inputTextField.setText("");
         });
     }
 
