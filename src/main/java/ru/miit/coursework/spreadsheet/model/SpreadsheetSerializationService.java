@@ -1,4 +1,4 @@
-package ru.miit.coursework.spreadsheet_model;
+package ru.miit.coursework.spreadsheet.model;
 
 import java.beans.XMLDecoder;
 import java.beans.XMLEncoder;
@@ -7,7 +7,8 @@ import java.io.*;
 public class SpreadsheetSerializationService implements SpreadsheetSerializationServiceInterface {
     private File currentSaveFile;
 
-    public void saveSpreadsheet(Spreadsheet spreadsheet) throws Exception {
+    @Override
+    public void saveSpreadsheet(SpreadsheetGraph spreadsheet) throws Exception {
         if (currentSaveFile != null) {
             saveSpreadsheet(currentSaveFile, spreadsheet);
         } else {
@@ -15,16 +16,18 @@ public class SpreadsheetSerializationService implements SpreadsheetSerialization
         }
     }
 
-    public void saveSpreadsheet(File file, Spreadsheet spreadsheet) throws FileNotFoundException {
+    @Override
+    public void saveSpreadsheet(File file, SpreadsheetGraph spreadsheet) throws FileNotFoundException {
         XMLEncoder encoder = new XMLEncoder(new BufferedOutputStream(new FileOutputStream(file)));
-        encoder.writeObject(spreadsheet);
+        encoder.writeObject(new OptimizedSpreadsheet(spreadsheet, spreadsheet.getRows(), spreadsheet.getColumns()));
         encoder.close();
         currentSaveFile = file;
     }
 
     @Override
-    public Spreadsheet openSpreadsheet(File file) throws FileNotFoundException {
+    public SpreadsheetGraph openSpreadsheet(File file) throws FileNotFoundException {
         XMLDecoder encoder = new XMLDecoder(new BufferedInputStream(new FileInputStream(file)));
-        return (Spreadsheet) encoder.readObject();
+        OptimizedSpreadsheet optimizedSpreadsheet = (OptimizedSpreadsheet) encoder.readObject();
+        return optimizedSpreadsheet.getSpreadsheetGraph();
     }
 }

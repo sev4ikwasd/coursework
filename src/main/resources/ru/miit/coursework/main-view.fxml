@@ -4,8 +4,8 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import org.controlsfx.control.spreadsheet.SpreadsheetView?>
-<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-      fx:controller="ru.miit.coursework.MainController">
+<VBox xmlns:fx="http://javafx.com/fxml" xmlns="http://javafx.com/javafx"
+      fx:controller="ru.miit.coursework.spreadsheet.SpreadsheetController">
     <MenuBar>
         <Menu text="File">
             <MenuItem text="New" onAction="#newSpreadsheetMenuEntryAction"/>
@@ -17,16 +17,13 @@
         </Menu>
     </MenuBar>
     <GridPane hgap="16">
-        <Label GridPane.rowIndex="0" GridPane.columnIndex="0" text="Cell type:"/>
-        <ChoiceBox GridPane.rowIndex="1" GridPane.columnIndex="0" onAction="#cellTypePickerAction"
-                   fx:id="cellTypePicker"/>
-        <Label GridPane.rowIndex="0" GridPane.columnIndex="1" text="Text color:"/>
-        <ColorPicker GridPane.rowIndex="1" GridPane.columnIndex="1" onAction="#textColorPickerAction"
-                     fx:id="textColorPicker">
-        </ColorPicker>
-        <Label GridPane.rowIndex="0" GridPane.columnIndex="2" text="Background color:"/>
-        <ColorPicker GridPane.rowIndex="1" GridPane.columnIndex="2" onAction="#backgroundColorPickerAction"
+        <Label GridPane.rowIndex="0" GridPane.columnIndex="0" text="Text color:"/>
+        <ColorPicker GridPane.rowIndex="1" GridPane.columnIndex="0" onAction="#textColorPickerAction"
+                     fx:id="textColorPicker"/>
+        <Label GridPane.rowIndex="0" GridPane.columnIndex="1" text="Background color:"/>
+        <ColorPicker GridPane.rowIndex="1" GridPane.columnIndex="1" onAction="#backgroundColorPickerAction"
                      fx:id="backgroundColorPicker"/>
+        <Region GridPane.rowIndex="0" GridPane.rowSpan="2" GridPane.columnIndex="2" prefWidth="0" minHeight="50"/>
         <TextField GridPane.rowIndex="2" GridPane.columnIndex="0" GridPane.columnSpan="3" prefWidth="Infinity"
                    fx:id="inputTextField" onAction="#inputTextFieldAction">
             <GridPane.margin>

@@ -10,12 +10,16 @@ import java.io.IOException;
 public class MainApplication extends Application {
     private static Stage primaryStage;
 
+    static public Stage getPrimaryStage() {
+        return MainApplication.primaryStage;
+    }
+
     private void setPrimaryStage(Stage stage) {
         MainApplication.primaryStage = stage;
     }
 
-    static public Stage getPrimaryStage() {
-        return MainApplication.primaryStage;
+    public static void main(String[] args) {
+        launch();
     }
 
     @Override
@@ -26,9 +30,5 @@ public class MainApplication extends Application {
         stage.setTitle("Spreadsheets");
         stage.setScene(scene);
         stage.show();
-    }
-
-    public static void main(String[] args) {
-        launch();
     }
 }
