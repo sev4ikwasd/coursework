@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.*?>
 <?import org.controlsfx.control.spreadsheet.SpreadsheetView?>
 <VBox xmlns:fx="http://javafx.com/fxml" xmlns="http://javafx.com/javafx"
-      fx:controller="ru.miit.coursework.spreadsheet.SpreadsheetController">
+      fx:controller="ru.miit.coursework.spreadsheet.logic.SpreadsheetController">
     <MenuBar>
         <Menu text="File">
             <MenuItem text="New" onAction="#newSpreadsheetMenuEntryAction"/>

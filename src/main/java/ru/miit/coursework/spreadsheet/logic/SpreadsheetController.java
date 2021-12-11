@@ -1,4 +1,4 @@
-package ru.miit.coursework.spreadsheet;
+package ru.miit.coursework.spreadsheet.logic;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -14,10 +14,8 @@ import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import org.controlsfx.control.spreadsheet.*;
 import ru.miit.coursework.MainApplication;
-import ru.miit.coursework.spreadsheet.model.Cell;
-import ru.miit.coursework.spreadsheet.model.SpreadsheetGraph;
-import ru.miit.coursework.spreadsheet.model.SpreadsheetSerializationService;
-import ru.miit.coursework.spreadsheet.model.SpreadsheetSerializationServiceInterface;
+import ru.miit.coursework.spreadsheet.serialization.SpreadsheetSerializationService;
+import ru.miit.coursework.spreadsheet.serialization.SpreadsheetSerializationServiceInterface;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -139,7 +137,7 @@ public class SpreadsheetController implements EventHandler<GridChange> {
                     display();
                     MainApplication.getPrimaryStage().setTitle(file.getName() + " - Spreadsheets");
                 } catch (FileNotFoundException e) {
-                    alertErrorHasOccurred(false);
+                    alertErrorHasOccurred("Error has occurred while opening file!");
                 }
             }
         });
@@ -167,16 +165,15 @@ public class SpreadsheetController implements EventHandler<GridChange> {
                 MainApplication.getPrimaryStage().setTitle(file.getName() + " - Spreadsheets");
                 isChanged = false;
             } catch (FileNotFoundException e) {
-                alertErrorHasOccurred(true);
+                alertErrorHasOccurred("Error has occurred while saving file!");
             }
         }
     }
 
-    void alertErrorHasOccurred(boolean isWhileSaving) {
+    void alertErrorHasOccurred(String text) {
         Alert errorAlert = new Alert(Alert.AlertType.ERROR);
         errorAlert.setTitle("Error!");
         errorAlert.setHeaderText("Error has occurred!");
-        String text = isWhileSaving ? "Error has occurred while saving file!" : "Error has occurred while opening file!";
         errorAlert.setContentText(text);
         errorAlert.show();
     }
@@ -266,8 +263,8 @@ public class SpreadsheetController implements EventHandler<GridChange> {
         String text = inputTextField.getText();
         int row = spreadsheet.getSelectionModel().getFocusedCell().getRow();
         int column = spreadsheet.getSelectionModel().getFocusedCell().getColumn();
-        spreadsheetGraph.getCell(row, column).setValue(text);
-        display();
+        if ((row >= 0) && (column >= 0))
+            grid.setCellValue(row, column, text);
     }
 
     private interface DontSaveCallback {

@@ -1,4 +1,4 @@
-package ru.miit.coursework.spreadsheet.model;
+package ru.miit.coursework.spreadsheet.logic;
 
 public class Cell {
     private int x, y;
