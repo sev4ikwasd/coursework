@@ -1,4 +1,6 @@
-package ru.miit.coursework.spreadsheet.model;
+package ru.miit.coursework.spreadsheet.serialization;
+
+import ru.miit.coursework.spreadsheet.logic.SpreadsheetGraph;
 
 import java.io.File;
 import java.io.FileNotFoundException;

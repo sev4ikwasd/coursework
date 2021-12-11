@@ -1,0 +1,118 @@
+package ru.miit.coursework.spreadsheet.serialization;
+
+import javafx.scene.paint.Color;
+import ru.miit.coursework.spreadsheet.logic.Cell;
+import ru.miit.coursework.spreadsheet.logic.SpreadsheetGraph;
+
+import java.beans.XMLDecoder;
+import java.beans.XMLEncoder;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class SpreadsheetSerializationService implements SpreadsheetSerializationServiceInterface {
+    private File currentSaveFile;
+
+    @Override
+    public void saveSpreadsheet(SpreadsheetGraph spreadsheet) throws Exception {
+        if (currentSaveFile != null) {
+            saveSpreadsheet(currentSaveFile, spreadsheet);
+        } else {
+            throw new Exception("No current save file");
+        }
+    }
+
+    @Override
+    public void saveSpreadsheet(File file, SpreadsheetGraph spreadsheet) throws FileNotFoundException {
+        XMLEncoder encoder = new XMLEncoder(new BufferedOutputStream(new FileOutputStream(file)));
+        encoder.writeObject(new OptimizedSpreadsheet(spreadsheet, spreadsheet.getRows(), spreadsheet.getColumns()));
+        encoder.close();
+        currentSaveFile = file;
+    }
+
+    @Override
+    public SpreadsheetGraph openSpreadsheet(File file) throws FileNotFoundException {
+        XMLDecoder encoder = new XMLDecoder(new BufferedInputStream(new FileInputStream(file)));
+        OptimizedSpreadsheet optimizedSpreadsheet = (OptimizedSpreadsheet) encoder.readObject();
+        return optimizedSpreadsheet.getSpreadsheetGraph();
+    }
+
+    public static class OptimizedSpreadsheet {
+        private List<Cell> optimizedSpreadsheetList;
+        private int rows;
+        private int columns;
+
+        public OptimizedSpreadsheet(SpreadsheetGraph spreadsheet, int rows, int columns) {
+            this.rows = rows;
+            this.columns = columns;
+
+            optimizedSpreadsheetList = new ArrayList<>();
+
+            Cell defaultCell = getDefaultCell();
+            for (int i = 0; i < rows; i++) {
+                for (int j = 0; j < columns; j++) {
+                    Cell cell = spreadsheet.getCell(i, j);
+                    if (!cell.getValue().equals(defaultCell.getValue())
+                            || !cell.getTextColor().equals(defaultCell.getTextColor())
+                            || !cell.getBackgroundColor().equals(defaultCell.getBackgroundColor())) {
+                        optimizedSpreadsheetList.add(cell);
+                    }
+                }
+            }
+        }
+
+        public OptimizedSpreadsheet(List<Cell> optimizedSpreadsheetList, int rows, int columns) {
+            this.optimizedSpreadsheetList = optimizedSpreadsheetList;
+            this.rows = rows;
+            this.columns = columns;
+        }
+
+        public OptimizedSpreadsheet() {
+        }
+
+        public SpreadsheetGraph getSpreadsheetGraph() {
+            Cell[][] cells = new Cell[rows][columns];
+            for (int i = 0; i < rows; i++) {
+                for (int j = 0; j < columns; j++) {
+                    for (Cell cell : optimizedSpreadsheetList) {
+                        if ((cell.getX() == i) && (cell.getY() == j)) {
+                            cells[i][j] = cell;
+                        }
+                    }
+                    if (cells[i][j] == null)
+                        cells[i][j] = getDefaultCell();
+                }
+            }
+
+            return new SpreadsheetGraph(cells);
+        }
+
+        private Cell getDefaultCell() {
+            return new Cell(0, 0, Color.WHITE.toString(), Color.BLACK.toString(), "", false);
+        }
+
+        public List<Cell> getOptimizedSpreadsheetList() {
+            return optimizedSpreadsheetList;
+        }
+
+        public void setOptimizedSpreadsheetList(List<Cell> optimizedSpreadsheetList) {
+            this.optimizedSpreadsheetList = optimizedSpreadsheetList;
+        }
+
+        public int getRows() {
+            return rows;
+        }
+
+        public void setRows(int rows) {
+            this.rows = rows;
+        }
+
+        public int getColumns() {
+            return columns;
+        }
+
+        public void setColumns(int columns) {
+            this.columns = columns;
+        }
+    }
+}
