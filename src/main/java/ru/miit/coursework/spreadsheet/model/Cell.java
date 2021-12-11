@@ -1,18 +1,18 @@
-package ru.miit.coursework.spreadsheet_model;
+package ru.miit.coursework.spreadsheet.model;
 
 public class Cell {
     private int x, y;
     private String backgroundColor, textColor;
-    private Type type;
     private Object value;
+    private boolean isEvaluable;
 
-    public Cell(int x, int y, String backgroundColor, String textColor, Type type, Object value) {
+    public Cell(int x, int y, String backgroundColor, String textColor, Object value, boolean isEvaluable) {
         this.x = x;
         this.y = y;
         this.backgroundColor = backgroundColor;
         this.textColor = textColor;
-        this.type = type;
         this.value = value;
+        this.isEvaluable = isEvaluable;
     }
 
     public Cell() {
@@ -50,20 +50,20 @@ public class Cell {
         this.textColor = textColor;
     }
 
-    public Type getType() {
-        return type;
-    }
-
-    public void setType(Type type) {
-        this.type = type;
-    }
-
     public Object getValue() {
         return value;
     }
 
     public void setValue(Object value) {
         this.value = value;
+    }
+
+    public boolean isEvaluable() {
+        return isEvaluable;
+    }
+
+    public void setEvaluable(boolean evaluable) {
+        isEvaluable = evaluable;
     }
 
     public enum Type {
