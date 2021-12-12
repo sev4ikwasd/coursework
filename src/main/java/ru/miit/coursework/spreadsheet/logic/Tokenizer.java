@@ -41,7 +41,7 @@ public class Tokenizer {
     }
 
     public enum TokenType {
-        FORMULASTART("\\="), NUMBER("-?\\d+"), BINARYOP("[+|\\-|\\*|\\/|\\^]"), REFERENCE("[A-Za-z][1-9]\\d?"),
+        FORMULASTART("\\="), NUMBER("[+-]?([0-9]*[.])?[0-9]+"), BINARYOP("[+|\\-|\\*|\\/|\\^]"), REFERENCE("[A-Za-z][1-9]\\d?"),
         WHITESPACE("\\s"), BRACEOPEN("\\("), BRACECLOSE("\\)"), INVALID(".");
 
         public final String pattern;
