@@ -13,6 +13,7 @@
             <MenuItem text="Save" onAction="#saveSpreadsheetMenuEntryAction"/>
             <MenuItem text="Save as" onAction="#saveAsSpreadsheetMenuEntryAction"/>
             <MenuItem text="Print" onAction="#printSpreadsheetMenuEntryAction"/>
+            <MenuItem text="Log out" onAction="#logOutMenuEntryAction"/>
             <MenuItem text="Exit" onAction="#exitSpreadsheetMenuEntryAction"/>
         </Menu>
     </MenuBar>

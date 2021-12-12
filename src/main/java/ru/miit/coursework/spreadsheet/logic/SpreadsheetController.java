@@ -7,18 +7,22 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.print.Printer;
 import javafx.print.PrinterJob;
 import javafx.scene.control.*;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 import org.controlsfx.control.spreadsheet.*;
 import ru.miit.coursework.MainApplication;
 import ru.miit.coursework.spreadsheet.serialization.SpreadsheetSerializationService;
 import ru.miit.coursework.spreadsheet.serialization.SpreadsheetSerializationServiceInterface;
+import ru.miit.coursework.util.AlertUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -94,7 +98,7 @@ public class SpreadsheetController implements EventHandler<GridChange> {
 
         if (input != null) {
             if (!gridChange.getNewValue().equals(gridChange.getOldValue())) isChanged = true;
-            
+
             boolean isNumber = true;
             try {
                 Double.parseDouble(input);
@@ -117,11 +121,11 @@ public class SpreadsheetController implements EventHandler<GridChange> {
                             spreadsheetGraph.evaluate();
                         } catch (Exception e) {
                             //Indirect self reference
-                            alertErrorHasOccurred(e.getMessage());
+                            AlertUtils.alertErrorHasOccurred(e.getMessage());
                         }
                     } else {
                         //Self reference
-                        alertErrorHasOccurred("Self references found!");
+                        AlertUtils.alertErrorHasOccurred("Self references found!");
                     }
                 }
             } else {
@@ -142,15 +146,15 @@ public class SpreadsheetController implements EventHandler<GridChange> {
     private boolean isSyntaxValid(List<Tokenizer.Token> tokensStream) {
         if (!SyntaxAnalyzer.isOperatorsBetweenOperands(tokensStream)) {
             //Incorrectly placed operands
-            alertErrorHasOccurred("Operands are placed incorrectly!");
+            AlertUtils.alertErrorHasOccurred("Operands are placed incorrectly!");
             return false;
         } else if (!SyntaxAnalyzer.isBracesBalanced(tokensStream)) {
             //Braces not balanced
-            alertErrorHasOccurred("Braces are not balanced!");
+            AlertUtils.alertErrorHasOccurred("Braces are not balanced!");
             return false;
         } else if (!SyntaxAnalyzer.areBracesProperlyPositioned(tokensStream)) {
             //Incorrectly placed braces
-            alertErrorHasOccurred("Braces are placed incorrectly!");
+            AlertUtils.alertErrorHasOccurred("Braces are placed incorrectly!");
             return false;
         }
         return true;
@@ -208,7 +212,7 @@ public class SpreadsheetController implements EventHandler<GridChange> {
                     display();
                     MainApplication.getPrimaryStage().setTitle(file.getName() + " - Spreadsheets");
                 } catch (FileNotFoundException e) {
-                    alertErrorHasOccurred("Error has occurred while opening file!");
+                    AlertUtils.alertErrorHasOccurred("Error has occurred while opening file!");
                 }
             }
         });
@@ -236,17 +240,9 @@ public class SpreadsheetController implements EventHandler<GridChange> {
                 MainApplication.getPrimaryStage().setTitle(file.getName() + " - Spreadsheets");
                 isChanged = false;
             } catch (FileNotFoundException e) {
-                alertErrorHasOccurred("Error has occurred while saving file!");
+                AlertUtils.alertErrorHasOccurred("Error has occurred while saving file!");
             }
         }
-    }
-
-    void alertErrorHasOccurred(String text) {
-        Alert errorAlert = new Alert(Alert.AlertType.ERROR);
-        errorAlert.setTitle("Error!");
-        errorAlert.setHeaderText("Error has occurred!");
-        errorAlert.setContentText(text);
-        errorAlert.show();
     }
 
     @FXML
@@ -257,6 +253,19 @@ public class SpreadsheetController implements EventHandler<GridChange> {
         PrinterJob job = PrinterJob.createPrinterJob(printer);
         job.showPrintDialog(MainApplication.getPrimaryStage());
         job.printPage(spreadsheet);
+    }
+
+    @FXML
+    public void logOutMenuEntryAction(ActionEvent event) {
+        unsavedChangesAlert(event, () -> {
+            FXMLLoader fxmlLoader = new FXMLLoader(MainApplication.class.getResource("login-view.fxml"));
+            Stage stage = MainApplication.getPrimaryStage();
+            try {
+                stage.getScene().setRoot(fxmlLoader.load());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     @FXML

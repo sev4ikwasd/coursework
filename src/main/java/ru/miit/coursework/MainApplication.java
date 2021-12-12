@@ -25,7 +25,8 @@ public class MainApplication extends Application {
     @Override
     public void start(Stage stage) throws IOException {
         setPrimaryStage(stage);
-        FXMLLoader fxmlLoader = new FXMLLoader(MainApplication.class.getResource("main-view.fxml"));
+        //FXMLLoader fxmlLoader = new FXMLLoader(MainApplication.class.getResource("main-view.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(MainApplication.class.getResource("login-view.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 740, 480);
         stage.setTitle("Spreadsheets");
         stage.setScene(scene);
