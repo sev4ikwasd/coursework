@@ -88,7 +88,7 @@ public class SpreadsheetSerializationService implements SpreadsheetSerialization
         }
 
         private Cell getDefaultCell() {
-            return new Cell(0, 0, Color.WHITE.toString(), Color.BLACK.toString(), "", false);
+            return new Cell(0, 0, Color.WHITE.toString(), Color.BLACK.toString(), "", false, "", true);
         }
 
         public List<Cell> getOptimizedSpreadsheetList() {

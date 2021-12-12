@@ -5,14 +5,18 @@ public class Cell {
     private String backgroundColor, textColor;
     private Object value;
     private boolean isEvaluable;
+    private String formula;
+    private boolean isString;
 
-    public Cell(int x, int y, String backgroundColor, String textColor, Object value, boolean isEvaluable) {
+    public Cell(int x, int y, String backgroundColor, String textColor, Object value, boolean isEvaluable, String formula, boolean isString) {
         this.x = x;
         this.y = y;
         this.backgroundColor = backgroundColor;
         this.textColor = textColor;
         this.value = value;
         this.isEvaluable = isEvaluable;
+        this.formula = formula;
+        this.isString = isString;
     }
 
     public Cell() {
@@ -66,9 +70,66 @@ public class Cell {
         isEvaluable = evaluable;
     }
 
-    public enum Type {
-        STRING,
-        INTEGER,
-        DOUBLE,
+    public String getFormula() {
+        return formula;
+    }
+
+    public void setFormula(String formula) {
+        this.formula = formula;
+    }
+
+    public boolean isString() {
+        return isString;
+    }
+
+    public void setString(boolean string) {
+        isString = string;
+    }
+
+    public String getStringCoordinates() {
+        String rowString = String.valueOf(x + 1);
+
+        StringBuilder sb = new StringBuilder();
+        int tempY = y + 1;
+        while (tempY-- > 0) {
+            sb.append((char) ('A' + (tempY % 26)));
+            tempY /= 26;
+        }
+        String columnString = sb.reverse().toString();
+
+        return columnString + rowString;
+    }
+
+    @Override
+    public String toString() {
+        if (!isEvaluable()) return formula;
+        if (value != null) return value.toString();
+        if (formula != null) return formula;
+        return "";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Cell cell = (Cell) o;
+
+        if (x != cell.x) return false;
+        if (y != cell.y) return false;
+        if (isEvaluable != cell.isEvaluable) return false;
+        if (isString != cell.isString) return false;
+        if (backgroundColor != null ? !backgroundColor.equals(cell.backgroundColor) : cell.backgroundColor != null)
+            return false;
+        if (textColor != null ? !textColor.equals(cell.textColor) : cell.textColor != null) return false;
+        if (value != null ? !value.equals(cell.value) : cell.value != null) return false;
+        return formula != null ? formula.equals(cell.formula) : cell.formula == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = x;
+        result = 31 * result + y;
+        return result;
     }
 }

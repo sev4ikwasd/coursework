@@ -6,4 +6,6 @@ open module ru.miit.coursework {
     requires javafx.graphics;
 
     requires org.controlsfx.controls;
+
+    requires org.jgrapht.core;
 }

@@ -19,6 +19,7 @@ import ru.miit.coursework.spreadsheet.serialization.SpreadsheetSerializationServ
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.List;
 import java.util.Optional;
 
 
@@ -35,6 +36,7 @@ public class SpreadsheetController implements EventHandler<GridChange> {
     TextField inputTextField;
     private GridBase grid;
     private SpreadsheetGraph spreadsheetGraph;
+    private Tokenizer tokenizer;
     private SpreadsheetSerializationServiceInterface spreadsheetSerializationService;
     private boolean isChanged = false;
 
@@ -49,13 +51,18 @@ public class SpreadsheetController implements EventHandler<GridChange> {
 
         createSpreadsheet();
 
+        tokenizer = new Tokenizer();
+
         textColorPicker.setValue(Color.BLACK);
         backgroundColorPicker.setValue(Color.WHITE);
     }
 
     private void createSpreadsheet() {
         spreadsheet.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
-        spreadsheet.getSelectionModel().getSelectedCells().addListener((ListChangeListener<TablePosition>) change -> updateToolbar());
+        spreadsheet.getSelectionModel().getSelectedCells().addListener((ListChangeListener<TablePosition>) change -> {
+            updateToolbar();
+            display();
+        });
 
         spreadsheetGraph = new SpreadsheetGraph(initialRowCount, initialColumnCount);
 
@@ -82,13 +89,71 @@ public class SpreadsheetController implements EventHandler<GridChange> {
 
     @Override
     public void handle(GridChange gridChange) {
-        if (!gridChange.getNewValue().equals(gridChange.getOldValue()))
-            isChanged = true;
+        Cell cell = spreadsheetGraph.getCell(gridChange.getRow(), gridChange.getColumn());
+        String input = (String) gridChange.getNewValue();
 
-        Object newValue = gridChange.getNewValue();
-        spreadsheetGraph.getCell(gridChange.getRow(), gridChange.getColumn()).setValue(newValue);
-
+        if (input != null) {
+            if (!gridChange.getNewValue().equals(gridChange.getOldValue())) isChanged = true;
+            
+            boolean isNumber = true;
+            try {
+                Double.parseDouble(input);
+            } catch (NumberFormatException exception) {
+                isNumber = false;
+            }
+            if (input.startsWith("=") || isNumber) {
+                List<Tokenizer.Token> tokensStream = tokenizer.tokenize(input);
+                if (tokensStream == null) {
+                    spreadsheetGraph.markUnevaluable(cell);
+                    cell.setFormula("");
+                    cell.setString(true);
+                    cell.setValue(input);
+                } else if (isSyntaxValid(tokensStream)) {
+                    if (!input.toUpperCase().equals(cell.getStringCoordinates())) {
+                        cell.setFormula(input);
+                        cell.setString(false);
+                        spreadsheetGraph.resolveDependencies(cell);
+                        try {
+                            spreadsheetGraph.evaluate();
+                        } catch (Exception e) {
+                            //Indirect self reference
+                            alertErrorHasOccurred(e.getMessage());
+                        }
+                    } else {
+                        //Self reference
+                        alertErrorHasOccurred("Self references found!");
+                    }
+                }
+            } else {
+                spreadsheetGraph.markUnevaluable(cell);
+                cell.setFormula("");
+                cell.setValue(input);
+                cell.setString(true);
+            }
+        } else {
+            spreadsheetGraph.markUnevaluable(cell);
+            cell.setFormula("");
+            cell.setValue("");
+            cell.setString(true);
+        }
         display();
+    }
+
+    private boolean isSyntaxValid(List<Tokenizer.Token> tokensStream) {
+        if (!SyntaxAnalyzer.isOperatorsBetweenOperands(tokensStream)) {
+            //Incorrectly placed operands
+            alertErrorHasOccurred("Operands are placed incorrectly!");
+            return false;
+        } else if (!SyntaxAnalyzer.isBracesBalanced(tokensStream)) {
+            //Braces not balanced
+            alertErrorHasOccurred("Braces are not balanced!");
+            return false;
+        } else if (!SyntaxAnalyzer.areBracesProperlyPositioned(tokensStream)) {
+            //Incorrectly placed braces
+            alertErrorHasOccurred("Braces are placed incorrectly!");
+            return false;
+        }
+        return true;
     }
 
     private void display() {
@@ -97,6 +162,11 @@ public class SpreadsheetController implements EventHandler<GridChange> {
             for (int j = 0; j < grid.getColumnCount(); j++) {
                 Cell cell = spreadsheetGraph.getCell(i, j);
                 String representation = cell.getValue().toString();
+                int row = spreadsheet.getSelectionModel().getFocusedCell().getRow();
+                int column = spreadsheet.getSelectionModel().getFocusedCell().getColumn();
+                if ((i == row) && (j == column) && (!cell.isString())) {
+                    representation = cell.getFormula();
+                }
                 grid.setCellValue(i, j, representation);
                 String stringBackgroundColor = cell.getBackgroundColor();
                 stringBackgroundColor = "#" + stringBackgroundColor.substring(2);
@@ -108,6 +178,7 @@ public class SpreadsheetController implements EventHandler<GridChange> {
         }
         grid.addEventHandler(GridChange.GRID_CHANGE_EVENT, this);
     }
+
 
     //Menus
 
@@ -224,13 +295,15 @@ public class SpreadsheetController implements EventHandler<GridChange> {
         int row = spreadsheet.getSelectionModel().getFocusedCell().getRow();
         int column = spreadsheet.getSelectionModel().getFocusedCell().getColumn();
         if ((row >= 0) && (column >= 0)) {
+            Cell cell = spreadsheetGraph.getCell(row, column);
 
             //Color pickers
-            textColorPicker.setValue(Color.valueOf(spreadsheetGraph.getCell(row, column).getTextColor()));
-            backgroundColorPicker.setValue(Color.valueOf(spreadsheetGraph.getCell(row, column).getBackgroundColor()));
+            textColorPicker.setValue(Color.valueOf(cell.getTextColor()));
+            backgroundColorPicker.setValue(Color.valueOf(cell.getBackgroundColor()));
 
             //Input text field
-            inputTextField.setText(spreadsheetGraph.getCell(row, column).getValue().toString());
+            String text = cell.isEvaluable() ? cell.getFormula() : cell.getValue().toString();
+            inputTextField.setText(text);
         }
     }
 
