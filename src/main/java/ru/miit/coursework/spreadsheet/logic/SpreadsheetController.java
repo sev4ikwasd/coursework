@@ -62,7 +62,7 @@ public class SpreadsheetController implements EventHandler<GridChange> {
     }
 
     private void createSpreadsheet() {
-        spreadsheet.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+        //spreadsheet.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
         spreadsheet.getSelectionModel().getSelectedCells().addListener((ListChangeListener<TablePosition>) change -> {
             updateToolbar();
             display();
@@ -301,16 +301,39 @@ public class SpreadsheetController implements EventHandler<GridChange> {
     }
 
     private void updateToolbar() {
+        //Color pickers
+        ObservableList<TablePosition> selectedCells = spreadsheet.getSelectionModel().getSelectedCells();
+        if(selectedCells.size() > 0){
+            int row = selectedCells.get(0).getRow();
+            int column = selectedCells.get(0).getColumn();
+            String commonTextColor = spreadsheetGraph.getCell(row, column).getTextColor();
+            String commonBackgroundColor = spreadsheetGraph.getCell(row, column).getBackgroundColor();
+            boolean isTextColorCommon = true;
+            boolean isBackgroundColorCommon = true;
+            for (int i = 1; i < selectedCells.size(); i++) {
+                row = selectedCells.get(i).getRow();
+                column = selectedCells.get(i).getColumn();
+                Cell cell = spreadsheetGraph.getCell(row, column);
+                if(!commonTextColor.equals(cell.getTextColor())){
+                    isTextColorCommon = false;
+                }
+                if(!commonBackgroundColor.equals(cell.getBackgroundColor())){
+                    isBackgroundColorCommon = false;
+                }
+            }
+
+            if (isTextColorCommon) textColorPicker.setValue(Color.valueOf(commonTextColor));
+            else textColorPicker.setValue(null);
+
+            if (isBackgroundColorCommon) backgroundColorPicker.setValue(Color.valueOf(commonBackgroundColor));
+            else backgroundColorPicker.setValue(null);
+        }
+
+        //Input text field
         int row = spreadsheet.getSelectionModel().getFocusedCell().getRow();
         int column = spreadsheet.getSelectionModel().getFocusedCell().getColumn();
         if ((row >= 0) && (column >= 0)) {
             Cell cell = spreadsheetGraph.getCell(row, column);
-
-            //Color pickers
-            textColorPicker.setValue(Color.valueOf(cell.getTextColor()));
-            backgroundColorPicker.setValue(Color.valueOf(cell.getBackgroundColor()));
-
-            //Input text field
             String text = cell.isEvaluable() ? cell.getFormula() : cell.getValue().toString();
             inputTextField.setText(text);
         }
@@ -320,24 +343,24 @@ public class SpreadsheetController implements EventHandler<GridChange> {
 
     @FXML
     public void textColorPickerAction(ActionEvent actionEvent) {
-        Color textColor = textColorPicker.getValue();
-        int row = spreadsheet.getSelectionModel().getFocusedCell().getRow();
-        int column = spreadsheet.getSelectionModel().getFocusedCell().getColumn();
-        if ((row >= 0) && (column >= 0)) {
-            spreadsheetGraph.getCell(row, column).setTextColor(textColor.toString());
-            display();
+        ObservableList<TablePosition> selectedCells = spreadsheet.getSelectionModel().getSelectedCells();
+        for (TablePosition selectedCell : selectedCells) {
+            int row = selectedCell.getRow();
+            int column = selectedCell.getColumn();
+            spreadsheetGraph.getCell(row, column).setTextColor(textColorPicker.getValue().toString());
         }
+        display();
     }
 
     @FXML
     public void backgroundColorPickerAction(ActionEvent actionEvent) {
-        Color backgroundColor = backgroundColorPicker.getValue();
-        int row = spreadsheet.getSelectionModel().getFocusedCell().getRow();
-        int column = spreadsheet.getSelectionModel().getFocusedCell().getColumn();
-        if ((row >= 0) && (column >= 0)) {
-            spreadsheetGraph.getCell(row, column).setBackgroundColor(backgroundColor.toString());
-            display();
+        ObservableList<TablePosition> selectedCells = spreadsheet.getSelectionModel().getSelectedCells();
+        for (TablePosition selectedCell : selectedCells) {
+            int row = selectedCell.getRow();
+            int column = selectedCell.getColumn();
+            spreadsheetGraph.getCell(row, column).setBackgroundColor(backgroundColorPicker.getValue().toString());
         }
+        display();
     }
 
     @FXML
