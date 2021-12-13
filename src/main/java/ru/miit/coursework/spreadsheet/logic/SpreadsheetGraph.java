@@ -26,11 +26,13 @@ public class SpreadsheetGraph extends DirectedPseudograph<Cell, DefaultEdge> {
 
     public SpreadsheetGraph(int rows, int columns) {
         super(DefaultEdge.class);
+        //Заполнение матрицы пустыми клетками
         cells = new Cell[rows][columns];
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
                 Cell cell = new Cell(i, j, Color.WHITE.toString(), Color.BLACK.toString(), "", false, "", true);
                 cells[i][j] = cell;
+                //Добавление ячейки в граф
                 addVertex(cell);
             }
         }
@@ -41,12 +43,14 @@ public class SpreadsheetGraph extends DirectedPseudograph<Cell, DefaultEdge> {
         cycles = new ArrayList<>();
     }
 
+    //Конструктор таблицы из массива
     public SpreadsheetGraph(Cell[][] cells) {
         super(DefaultEdge.class);
         this.rows = cells.length;
         this.columns = cells[0].length;
 
         this.cells = cells;
+        //Добавление ячейки в граф
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
                 addVertex(cells[i][j]);
@@ -61,10 +65,13 @@ public class SpreadsheetGraph extends DirectedPseudograph<Cell, DefaultEdge> {
         return cells[row][column];
     }
 
+    //Метод для получения ячейки из кода ячейки типа B5, A22 и т.д.
     public Cell getCell(String reference) {
-        // Divide reference to columns and row e.g. B5 -> B and 5
+        //Разделение кода на строку и колонку (B5 -> B и 5  A22 -> A и 22)
         String[] part = reference.split("(?<=\\D)(?=\\d)");
+        //Перевод строки в число
         int row = Integer.parseInt(part[1]) - 1;
+        //Перевод колонки в число
         int column = 0;
         for (int i = 0; i < part[0].length(); i++) {
             column = column * 26 + (part[0].charAt(i) - ('A' - 1));
@@ -73,6 +80,7 @@ public class SpreadsheetGraph extends DirectedPseudograph<Cell, DefaultEdge> {
         return cells[row][column];
     }
 
+    //Метод для вычисления связанных формулой ячеек
     public void resolveDependencies(Cell cell) {
         DefaultEdge[] outgoingEdges = outgoingEdgesOf(cell).toArray(DefaultEdge[]::new);
         for (DefaultEdge edge : outgoingEdges) removeEdge(edge);
@@ -82,6 +90,7 @@ public class SpreadsheetGraph extends DirectedPseudograph<Cell, DefaultEdge> {
         }
     }
 
+    //Метод для пометки ячейки и зависящих от нее ячеек невычислимыми
     public void markUnevaluable(Cell cell) {
         for (DefaultEdge incomingEdge : incomingEdgesOf(cell)) {
             Cell dependentCell = getEdgeSource(incomingEdge);
@@ -93,16 +102,19 @@ public class SpreadsheetGraph extends DirectedPseudograph<Cell, DefaultEdge> {
         cell.setFormula("");
     }
 
+    //Меотд вычисления результатов формул
     public void evaluate() throws Exception {
         resetEvaluabilityMarks();
         markCycledVertices();
         markEmptyDependencies();
+        //Следующий код позволяет вычислять ячейки в порядке их зависимости
         DepthFirstIterator<Cell, DefaultEdge> dfsIterator = new DepthFirstIterator<>(this);
         dfsIterator.setCrossComponentTraversal(true);
         dfsIterator.addTraversalListener(new TraversalListenerAdapter<>() {
             @Override
             public void vertexFinished(VertexTraversalEvent e) {
                 Cell cell = (Cell) e.getVertex();
+                //Вычислить значение ячейки, если она имеет формулу
                 if (cell.isEvaluable()) {
                     evaluateCell(cell);
                 }
@@ -111,6 +123,7 @@ public class SpreadsheetGraph extends DirectedPseudograph<Cell, DefaultEdge> {
         while (dfsIterator.hasNext()) dfsIterator.next();
     }
 
+    //Метод для сброса значений вычислимости ячеек
     private void resetEvaluabilityMarks() {
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
@@ -119,6 +132,7 @@ public class SpreadsheetGraph extends DirectedPseudograph<Cell, DefaultEdge> {
         }
     }
 
+    //Метод для поиска ссылок на себя в формулах
     private void markCycledVertices() throws Exception {
         cycles = cyclesDetector.findSimpleCycles();
         String message = "";
@@ -137,6 +151,7 @@ public class SpreadsheetGraph extends DirectedPseudograph<Cell, DefaultEdge> {
         }
     }
 
+    //Метод для пометки и сброса ячеек с формулами ведущими в пустые ячейки
     private void markEmptyDependencies() {
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
@@ -150,20 +165,25 @@ public class SpreadsheetGraph extends DirectedPseudograph<Cell, DefaultEdge> {
         }
     }
 
+    //Метод для вычисления значения ячейки
     private void evaluateCell(Cell cell) {
         cell.setValue(evaluate(tokenizer.tokenize(cell.getFormula())));
     }
 
+    //Метод для вычисления значения ячейки по формуле в токенизированном виде
     private Object evaluate(List<Tokenizer.Token> tokensStream) {
+        //Если ячейка имеет формулу - убрать знак =
         if (tokensStream.get(0).equals(new Tokenizer.Token(Tokenizer.TokenType.FORMULASTART, "="))) {
             tokensStream.remove(0);
         }
+        //Добавить скобки вокруг формулы
         tokensStream.add(0, new Tokenizer.Token(Tokenizer.TokenType.BRACEOPEN, "("));
         tokensStream.add(new Tokenizer.Token(Tokenizer.TokenType.BRACECLOSE, ")"));
         LinkedList<Tokenizer.Token> outputStack = new LinkedList<>();
         LinkedList<Tokenizer.Token> operatorStack = new LinkedList<>();
         for (int i = 1; i < tokensStream.size(); i++) {
             Tokenizer.Token token = tokensStream.get(i);
+            //Совершить действия в зависимости от токена
             switch (token.type) {
                 case NUMBER:
                     outputStack.addLast(token);
@@ -199,8 +219,10 @@ public class SpreadsheetGraph extends DirectedPseudograph<Cell, DefaultEdge> {
                     break;
             }
         }
+        //Если значение не удалось вычислить вернуть пустую строку
         if (outputStack.isEmpty()) return "";
         else {
+            //Иначе попробовать преобразовать число в значение с плавающей точке, иначе вернуть ноль
             try {
                 return Double.parseDouble(outputStack.getLast().data);
             } catch (NumberFormatException exception) {
@@ -209,6 +231,7 @@ public class SpreadsheetGraph extends DirectedPseudograph<Cell, DefaultEdge> {
         }
     }
 
+    //Метод для перевода оператора в строковом виде в реальную формулу
     private Double evaluate(String firstOperand, String secondOperand, String operator) {
         Double a = Double.parseDouble(firstOperand);
         Double b = Double.parseDouble(secondOperand);
@@ -222,13 +245,14 @@ public class SpreadsheetGraph extends DirectedPseudograph<Cell, DefaultEdge> {
         };
     }
 
+    //Метод для сравнения порядка вычисления операторов
     private boolean isHigherPrecedence(Tokenizer.Token firstOperator, Tokenizer.Token secondOperator) {
         int firstPrecedence = getPrecedence(firstOperator);
         int secondPrecedence = getPrecedence(secondOperator);
         return firstPrecedence > secondPrecedence;
     }
 
-
+    //Метод для получения порядка вычисления операторов
     private int getPrecedence(Tokenizer.Token operator) {
         if (operator == null) return -1;
         switch (operator.data) {

@@ -47,9 +47,11 @@ public class LoginController {
                     AlertUtils.alertErrorHasOccurred("Wrong login or password");
                     return;
                 }
+                //Хэширование пароля с солью
                 KeySpec spec = new PBEKeySpec(passwordField.getText().toCharArray(), user.getSalt(), 65536, 128);
                 SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
                 byte[] hashedPassword = factory.generateSecret(spec).getEncoded();
+                //Если пароль верный, то открывается окно таблиц
                 if (Arrays.equals(hashedPassword, user.getPasswordHash())) {
                     FXMLLoader fxmlLoader = new FXMLLoader(MainApplication.class.getResource("main-view.fxml"));
                     Stage stage = MainApplication.getPrimaryStage();
@@ -70,6 +72,7 @@ public class LoginController {
 
     @FXML
     public void registerButtonAction(ActionEvent event) {
+        //Переход в окно регистрации
         FXMLLoader fxmlLoader = new FXMLLoader(MainApplication.class.getResource("register-view.fxml"));
         Stage stage = MainApplication.getPrimaryStage();
         try {

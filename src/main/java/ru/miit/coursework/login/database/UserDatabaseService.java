@@ -9,16 +9,20 @@ public class UserDatabaseService implements UserDatabaseServiceInterface {
 
     @Override
     public Connection getDBConnection() throws ClassNotFoundException, SQLException {
+        //Соединение открывается если оно еще не открыто
         if (connection == null) {
+            //Загрузка sqlite драйвера
             Class.forName("org.sqlite.JDBC");
             DriverManager.registerDriver(new org.sqlite.JDBC());
             String location = "database.db";
+            //Подключение к таблице, находящейся в той же папке что и программа
             connection = DriverManager.getConnection("jdbc:sqlite:" + location);
             createTable();
         }
         return connection;
     }
 
+    //Метод создающий таблицу, если она еще не создана
     private void createTable() throws SQLException {
         String sqlCreate = "CREATE TABLE IF NOT EXISTS \"users\" (" +
                 "\"id\" INTEGER NOT NULL," +
@@ -51,6 +55,7 @@ public class UserDatabaseService implements UserDatabaseServiceInterface {
         preparedStatement.setString(1, login);
         ResultSet resultSet = preparedStatement.executeQuery();
 
+        //Возврат null если пользователь не найден
         if (resultSet.isClosed())
             return null;
 
