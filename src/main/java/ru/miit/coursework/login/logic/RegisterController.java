@@ -43,17 +43,21 @@ public class RegisterController {
         if (!loginField.getText().isEmpty() && !passwordField.getText().isEmpty()) {
             try {
                 User user = userDatabaseService.getUserByLogin(loginField.getText());
+                //Проверка на то, существует ли польователь с данным логином
                 if (user != null) {
                     AlertUtils.alertErrorHasOccurred("User with such login exists");
                     return;
                 }
+                //Создание случайной соли
                 SecureRandom random = new SecureRandom();
                 byte[] salt = new byte[16];
                 random.nextBytes(salt);
+                //Хэширование пароля с солью
                 KeySpec spec = new PBEKeySpec(passwordField.getText().toCharArray(), salt, 65536, 128);
                 SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
                 byte[] hashedPassword = factory.generateSecret(spec).getEncoded();
 
+                //Занесение пользователя в БД
                 user = new User(loginField.getText(), hashedPassword, salt);
                 userDatabaseService.signUpUser(user);
 
@@ -70,6 +74,7 @@ public class RegisterController {
 
     @FXML
     public void backButtonAction(ActionEvent event) {
+        //Переход обратно в окно логина
         FXMLLoader fxmlLoader = new FXMLLoader(MainApplication.class.getResource("login-view.fxml"));
         Stage stage = MainApplication.getPrimaryStage();
         try {

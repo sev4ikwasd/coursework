@@ -45,6 +45,7 @@ public class SpreadsheetController implements EventHandler<GridChange> {
     private boolean isChanged = false;
 
     public void initialize() {
+        //Добавление проверки на созранение таблици при нажатии кнопки закрытия
         MainApplication.getPrimaryStage().setOnCloseRequest(event -> {
             if (unsavedChangesAlert(new ActionEvent(), Platform::exit)) event.consume();
         });
@@ -61,8 +62,9 @@ public class SpreadsheetController implements EventHandler<GridChange> {
         backgroundColorPicker.setValue(Color.WHITE);
     }
 
+    //Метод для инициализации таблицы
     private void createSpreadsheet() {
-        //spreadsheet.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+        //При изменении выбранных ячеек обновить тулбар и таблицу
         spreadsheet.getSelectionModel().getSelectedCells().addListener((ListChangeListener<TablePosition>) change -> {
             updateToolbar();
             display();
@@ -78,6 +80,7 @@ public class SpreadsheetController implements EventHandler<GridChange> {
         display();
     }
 
+    //Метод заполнения таблицы ячейками
     private void populateSpreadsheet() {
         ObservableList<ObservableList<SpreadsheetCell>> spreadsheetContent = FXCollections.observableArrayList();
         for (int i = 0; i < grid.getRowCount(); i++) {
@@ -91,44 +94,53 @@ public class SpreadsheetController implements EventHandler<GridChange> {
         grid.setRows(spreadsheetContent);
     }
 
+    //Метод для обработке изменений в таблице
     @Override
     public void handle(GridChange gridChange) {
         Cell cell = spreadsheetGraph.getCell(gridChange.getRow(), gridChange.getColumn());
         String input = (String) gridChange.getNewValue();
 
         if (input != null) {
+            //Если ячейка поменялась, перевести флаг изменений в таблице
             if (!gridChange.getNewValue().equals(gridChange.getOldValue())) isChanged = true;
 
+            //Проверка на то является ли введенное значение числом
             boolean isNumber = true;
             try {
                 Double.parseDouble(input);
             } catch (NumberFormatException exception) {
                 isNumber = false;
             }
+            //Если введена формула или число:
             if (input.startsWith("=") || isNumber) {
+                //Перевести формулу в вид токена
                 List<Tokenizer.Token> tokensStream = tokenizer.tokenize(input);
+                //Если список токенов пустой - пометить ячейку как невычислимую
                 if (tokensStream == null) {
                     spreadsheetGraph.markUnevaluable(cell);
                     cell.setFormula("");
                     cell.setString(true);
                     cell.setValue(input);
-                } else if (isSyntaxValid(tokensStream)) {
+                } else if (isSyntaxValid(tokensStream)) {//Если синтаксис верен:
                     if (!input.toUpperCase().equals(cell.getStringCoordinates())) {
                         cell.setFormula(input);
                         cell.setString(false);
+                        //Разрешить зависимости ячейки
                         spreadsheetGraph.resolveDependencies(cell);
                         try {
+                            //Вычислить значение
                             spreadsheetGraph.evaluate();
                         } catch (Exception e) {
-                            //Indirect self reference
+                            //Предупреждение о непрямой ссылке на себя в формуле
                             AlertUtils.alertErrorHasOccurred(e.getMessage());
                         }
                     } else {
-                        //Self reference
+                        //Предупреждение о прямой ссылке на себя в формуле
                         AlertUtils.alertErrorHasOccurred("Self references found!");
                     }
                 }
             } else {
+                //Выполняется если введенное значение - обычная строка
                 spreadsheetGraph.markUnevaluable(cell);
                 cell.setFormula("");
                 cell.setValue(input);
@@ -143,35 +155,37 @@ public class SpreadsheetController implements EventHandler<GridChange> {
         display();
     }
 
+    //Метод проверки синтаксиса формулы
     private boolean isSyntaxValid(List<Tokenizer.Token> tokensStream) {
         if (!SyntaxAnalyzer.isOperatorsBetweenOperands(tokensStream)) {
-            //Incorrectly placed operands
             AlertUtils.alertErrorHasOccurred("Operands are placed incorrectly!");
             return false;
         } else if (!SyntaxAnalyzer.isBracesBalanced(tokensStream)) {
-            //Braces not balanced
             AlertUtils.alertErrorHasOccurred("Braces are not balanced!");
             return false;
         } else if (!SyntaxAnalyzer.areBracesProperlyPositioned(tokensStream)) {
-            //Incorrectly placed braces
             AlertUtils.alertErrorHasOccurred("Braces are placed incorrectly!");
             return false;
         }
         return true;
     }
 
+    //Метод вывода таблицы
     private void display() {
         grid.removeEventHandler(GridChange.GRID_CHANGE_EVENT, this);
         for (int i = 0; i < grid.getRowCount(); i++) {
             for (int j = 0; j < grid.getColumnCount(); j++) {
                 Cell cell = spreadsheetGraph.getCell(i, j);
+                //Выводимая в ячейку строка - ее значение
                 String representation = cell.getValue().toString();
                 int row = spreadsheet.getSelectionModel().getFocusedCell().getRow();
                 int column = spreadsheet.getSelectionModel().getFocusedCell().getColumn();
                 if ((i == row) && (j == column) && (!cell.isString())) {
+                    //Однако если ячейка выделена, выводится формула
                     representation = cell.getFormula();
                 }
                 grid.setCellValue(i, j, representation);
+                //Следующий код изменяет CSS значения цвета текста и фона ячейки
                 String stringBackgroundColor = cell.getBackgroundColor();
                 stringBackgroundColor = "#" + stringBackgroundColor.substring(2);
                 String stringTextColor = cell.getTextColor();
@@ -184,14 +198,16 @@ public class SpreadsheetController implements EventHandler<GridChange> {
     }
 
 
-    //Menus
+    //Меню:
 
     @FXML
     public void newSpreadsheetMenuEntryAction(ActionEvent event) {
         unsavedChangesAlert(event, () -> {
+            //Созжать новую таблицу
             spreadsheetGraph = new SpreadsheetGraph(initialRowCount, initialColumnCount);
             populateSpreadsheet();
 
+            //Сбросить значения инструментов тулбара
             textColorPicker.setValue(Color.BLACK);
             backgroundColorPicker.setValue(Color.WHITE);
             inputTextField.setText("");
@@ -208,8 +224,10 @@ public class SpreadsheetController implements EventHandler<GridChange> {
             File file = fileChooser.showOpenDialog(MainApplication.getPrimaryStage());
             if (file != null) {
                 try {
+                    //Загрузить таблицу
                     spreadsheetGraph = spreadsheetSerializationService.openSpreadsheet(file);
                     display();
+                    //Поменять название на название файла
                     MainApplication.getPrimaryStage().setTitle(file.getName() + " - Spreadsheets");
                 } catch (FileNotFoundException e) {
                     AlertUtils.alertErrorHasOccurred("Error has occurred while opening file!");
@@ -221,9 +239,11 @@ public class SpreadsheetController implements EventHandler<GridChange> {
     @FXML
     public void saveSpreadsheetMenuEntryAction(ActionEvent event) {
         try {
+            //Сохранить таблицу, если файл для сохранения уже существует
             spreadsheetSerializationService.saveSpreadsheet(spreadsheetGraph);
             isChanged = false;
         } catch (Exception e) {
+            //Иначе запустить метод в котором реализован запрос места для сохранения
             saveAsSpreadsheetMenuEntryAction(event);
         }
     }
@@ -236,7 +256,9 @@ public class SpreadsheetController implements EventHandler<GridChange> {
         File file = fileChooser.showSaveDialog(MainApplication.getPrimaryStage());
         if (file != null) {
             try {
+                //Сохранить таблицу по выбранному пути
                 spreadsheetSerializationService.saveSpreadsheet(file, spreadsheetGraph);
+                //Посенять название на сохраненное
                 MainApplication.getPrimaryStage().setTitle(file.getName() + " - Spreadsheets");
                 isChanged = false;
             } catch (FileNotFoundException e) {
@@ -247,9 +269,9 @@ public class SpreadsheetController implements EventHandler<GridChange> {
 
     @FXML
     public void printSpreadsheetMenuEntryAction(ActionEvent event) {
-        // For some reason PrinterJob can be created only when printer is given or default printer exists, but if there
-        // is no default printer createPrinterJob() returns null, and you can't even get to showPrintDialog to choose one.
+        //Если есть принтер по-умолчанию выбрать его, иначе выбрать первый из списка
         Printer printer = Printer.getDefaultPrinter() == null ? (Printer) Printer.getAllPrinters().toArray()[0] : Printer.getDefaultPrinter();
+        //Запуск диалога печати
         PrinterJob job = PrinterJob.createPrinterJob(printer);
         job.showPrintDialog(MainApplication.getPrimaryStage());
         job.printPage(spreadsheet);
@@ -258,6 +280,7 @@ public class SpreadsheetController implements EventHandler<GridChange> {
     @FXML
     public void logOutMenuEntryAction(ActionEvent event) {
         unsavedChangesAlert(event, () -> {
+            //Выйти в окно входа
             FXMLLoader fxmlLoader = new FXMLLoader(MainApplication.class.getResource("login-view.fxml"));
             Stage stage = MainApplication.getPrimaryStage();
             try {
@@ -273,6 +296,8 @@ public class SpreadsheetController implements EventHandler<GridChange> {
         unsavedChangesAlert(event, Platform::exit);
     }
 
+    //Метод для вывода уведомления о несохраненной таблице если она не сохранена, и выполнения переданного
+    //лямбда-выражения или функции
     private boolean unsavedChangesAlert(ActionEvent event, DontSaveCallback callback) {
         if (isChanged) {
             Alert unsavedAlert = new Alert(Alert.AlertType.CONFIRMATION);
@@ -300,12 +325,15 @@ public class SpreadsheetController implements EventHandler<GridChange> {
         }
     }
 
+    //Метод для обновления тулбаров при изменении выбранных ячеек
     private void updateToolbar() {
-        //Color pickers
+        //Код для обновления селекторов цвета
         ObservableList<TablePosition> selectedCells = spreadsheet.getSelectionModel().getSelectedCells();
-        if(selectedCells.size() > 0){
+        //Если выбраны ячейки:
+        if (selectedCells.size() > 0) {
             int row = selectedCells.get(0).getRow();
             int column = selectedCells.get(0).getColumn();
+            //Переменные для хранения общего цвета
             String commonTextColor = spreadsheetGraph.getCell(row, column).getTextColor();
             String commonBackgroundColor = spreadsheetGraph.getCell(row, column).getBackgroundColor();
             boolean isTextColorCommon = true;
@@ -314,14 +342,16 @@ public class SpreadsheetController implements EventHandler<GridChange> {
                 row = selectedCells.get(i).getRow();
                 column = selectedCells.get(i).getColumn();
                 Cell cell = spreadsheetGraph.getCell(row, column);
-                if(!commonTextColor.equals(cell.getTextColor())){
+                //Проверить совпадает ли цвет следующей ячейки с общим, и если нет то поменять значение флага
+                if (!commonTextColor.equals(cell.getTextColor())) {
                     isTextColorCommon = false;
                 }
-                if(!commonBackgroundColor.equals(cell.getBackgroundColor())){
+                if (!commonBackgroundColor.equals(cell.getBackgroundColor())) {
                     isBackgroundColorCommon = false;
                 }
             }
 
+            //Если есть общий цвет у выбранных ячеек выбрать его, иначе передать null
             if (isTextColorCommon) textColorPicker.setValue(Color.valueOf(commonTextColor));
             else textColorPicker.setValue(null);
 
@@ -329,17 +359,18 @@ public class SpreadsheetController implements EventHandler<GridChange> {
             else backgroundColorPicker.setValue(null);
         }
 
-        //Input text field
+        //Код для обновления поля ввода текста
         int row = spreadsheet.getSelectionModel().getFocusedCell().getRow();
         int column = spreadsheet.getSelectionModel().getFocusedCell().getColumn();
         if ((row >= 0) && (column >= 0)) {
             Cell cell = spreadsheetGraph.getCell(row, column);
+            //Если ячейка имеет формулу, задать ее, иначе ее значение
             String text = cell.isEvaluable() ? cell.getFormula() : cell.getValue().toString();
             inputTextField.setText(text);
         }
     }
 
-    //Toolbars
+    //Тулбары
 
     @FXML
     public void textColorPickerAction(ActionEvent actionEvent) {
@@ -347,6 +378,7 @@ public class SpreadsheetController implements EventHandler<GridChange> {
         for (TablePosition selectedCell : selectedCells) {
             int row = selectedCell.getRow();
             int column = selectedCell.getColumn();
+            //Изменить цвет текста для каждой из выбранных ячеек
             spreadsheetGraph.getCell(row, column).setTextColor(textColorPicker.getValue().toString());
         }
         display();
@@ -358,6 +390,7 @@ public class SpreadsheetController implements EventHandler<GridChange> {
         for (TablePosition selectedCell : selectedCells) {
             int row = selectedCell.getRow();
             int column = selectedCell.getColumn();
+            //Изменить цвет фона для каждой из выбранных ячеек
             spreadsheetGraph.getCell(row, column).setBackgroundColor(backgroundColorPicker.getValue().toString());
         }
         display();
@@ -368,10 +401,12 @@ public class SpreadsheetController implements EventHandler<GridChange> {
         String text = inputTextField.getText();
         int row = spreadsheet.getSelectionModel().getFocusedCell().getRow();
         int column = spreadsheet.getSelectionModel().getFocusedCell().getColumn();
+        //Изменить значение ячейки на введенное в поле для ввода текста
         if ((row >= 0) && (column >= 0))
             grid.setCellValue(row, column, text);
     }
 
+    //Контейнер для передачи функции
     private interface DontSaveCallback {
         void action();
     }

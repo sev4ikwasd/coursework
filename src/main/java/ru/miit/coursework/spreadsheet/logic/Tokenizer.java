@@ -17,6 +17,8 @@ public class Tokenizer {
         }
     }
 
+    //Метод для разбиения вводимого текста на токены - единичные данные, такие как число, операция над числами,
+    //скобка и т.д.
     public List<Token> tokenize(String input) {
         List<Token> tokens = new ArrayList<>();
         Matcher matcher = mTokenPatterns.matcher(input.toUpperCase());
@@ -40,6 +42,7 @@ public class Tokenizer {
         return tokens;
     }
 
+    //Типы токенов формулы
     public enum TokenType {
         FORMULASTART("\\="), NUMBER("[+-]?([0-9]*[.])?[0-9]+"), BINARYOP("[+|\\-|\\*|\\/|\\^]"), REFERENCE("[A-Za-z][1-9]\\d?"),
         WHITESPACE("\\s"), BRACEOPEN("\\("), BRACECLOSE("\\)"), INVALID(".");
@@ -51,6 +54,7 @@ public class Tokenizer {
         }
     }
 
+    //Структура данных для хранения пары тип токена - данные
     public static class Token {
         public TokenType type;
         public String data;

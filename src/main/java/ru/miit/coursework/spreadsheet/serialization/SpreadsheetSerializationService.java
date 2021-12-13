@@ -13,6 +13,7 @@ import java.util.List;
 public class SpreadsheetSerializationService implements SpreadsheetSerializationServiceInterface {
     private File currentSaveFile;
 
+    //Метод, пытающийся сохранить таблицу в файл, если он уже создан
     @Override
     public void saveSpreadsheet(SpreadsheetGraph spreadsheet) throws Exception {
         if (currentSaveFile != null) {
@@ -25,6 +26,7 @@ public class SpreadsheetSerializationService implements SpreadsheetSerialization
     @Override
     public void saveSpreadsheet(File file, SpreadsheetGraph spreadsheet) throws FileNotFoundException {
         XMLEncoder encoder = new XMLEncoder(new BufferedOutputStream(new FileOutputStream(file)));
+        //Запись таблицы в файл в оптимизированном виде
         encoder.writeObject(new OptimizedSpreadsheet(spreadsheet, spreadsheet.getRows(), spreadsheet.getColumns()));
         encoder.close();
         currentSaveFile = file;
@@ -34,6 +36,7 @@ public class SpreadsheetSerializationService implements SpreadsheetSerialization
     public SpreadsheetGraph openSpreadsheet(File file) throws FileNotFoundException {
         XMLDecoder encoder = new XMLDecoder(new BufferedInputStream(new FileInputStream(file)));
         OptimizedSpreadsheet optimizedSpreadsheet = (OptimizedSpreadsheet) encoder.readObject();
+        //Возврат таблицы в обычный вид
         return optimizedSpreadsheet.getSpreadsheetGraph();
     }
 
@@ -48,6 +51,7 @@ public class SpreadsheetSerializationService implements SpreadsheetSerialization
 
             optimizedSpreadsheetList = new ArrayList<>();
 
+            //Следующий код удаляет все стандартные ячейки, и сохраняет их в список
             Cell defaultCell = getDefaultCell();
             for (int i = 0; i < rows; i++) {
                 for (int j = 0; j < columns; j++) {
@@ -70,6 +74,7 @@ public class SpreadsheetSerializationService implements SpreadsheetSerialization
         public OptimizedSpreadsheet() {
         }
 
+        //Метод для возврата стандартных ячеек в таблицу
         public SpreadsheetGraph getSpreadsheetGraph() {
             Cell[][] cells = new Cell[rows][columns];
             for (int i = 0; i < rows; i++) {
@@ -87,6 +92,7 @@ public class SpreadsheetSerializationService implements SpreadsheetSerialization
             return new SpreadsheetGraph(cells);
         }
 
+        //Стандартная ячейка
         private Cell getDefaultCell() {
             return new Cell(0, 0, Color.WHITE.toString(), Color.BLACK.toString(), "", false, "", true);
         }

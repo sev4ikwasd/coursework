@@ -3,7 +3,7 @@ package ru.miit.coursework.spreadsheet.logic;
 import java.util.List;
 
 public class SyntaxAnalyzer {
-
+    //Проверка на то сбалансированы ли скобки
     public static boolean isBracesBalanced(List<Tokenizer.Token> tokenStream) {
         int count = 0;
         for (Tokenizer.Token token : tokenStream) {
@@ -14,6 +14,7 @@ public class SyntaxAnalyzer {
         return count == 0;
     }
 
+    //Проверка на то правильно ли расставлены операторы
     public static boolean isOperatorsBetweenOperands(List<Tokenizer.Token> tokensStream) {
         boolean operatorExpected = false;
         for (Tokenizer.Token token : tokensStream) {
@@ -28,6 +29,7 @@ public class SyntaxAnalyzer {
         return operatorExpected;
     }
 
+    //Проверка на то правильно ли расставлены скобки
     public static boolean areBracesProperlyPositioned(List<Tokenizer.Token> tokensStream) {
         for (int i = 0; i < tokensStream.size(); ++i) {
             if (tokensStream.get(i).type == Tokenizer.TokenType.BRACEOPEN) {
