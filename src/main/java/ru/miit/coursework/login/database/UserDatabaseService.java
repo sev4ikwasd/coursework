@@ -26,9 +26,9 @@ public class UserDatabaseService implements UserDatabaseServiceInterface {
     private void createTable() throws SQLException {
         String sqlCreate = "CREATE TABLE IF NOT EXISTS \"users\" (" +
                 "\"id\" INTEGER NOT NULL," +
-                "\"login\" INTEGER UNIQUE," +
-                "\"password_hash\" BLOB," +
-                "\"salt\" BLOB," +
+                "\"login\" TEXT NOT NULL UNIQUE," +
+                "\"password_hash\" BLOB NOT NULL," +
+                "\"salt\" BLOB NOT NULL," +
                 "PRIMARY KEY(\"id\" AUTOINCREMENT))";
 
         Statement stmt = connection.createStatement();
