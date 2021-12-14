@@ -16,13 +16,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class SpreadsheetGraph extends DirectedPseudograph<Cell, DefaultEdge> {
-    private static final Pattern referencePattern = Pattern.compile(Tokenizer.TokenType.REFERENCE.pattern);
-    private static final Tokenizer tokenizer = new Tokenizer();
-    private final Cell[][] cells;
-    private final int rows;
-    private final int columns;
-    private final DirectedSimpleCycles<Cell, DefaultEdge> cyclesDetector;
-    private List<List<Cell>> cycles;
+    private static final Pattern referencePattern = Pattern.compile(Tokenizer.TokenType.REFERENCE.pattern); //Регулярное выражение ссылки в формуле
+    private static final Tokenizer tokenizer = new Tokenizer(); //Обьект токенайзера
+    private final Cell[][] cells; //Матрица ячеек
+    private final int rows; //Количество строк
+    private final int columns; //Количество колонок
+    private final DirectedSimpleCycles<Cell, DefaultEdge> cyclesDetector; //Обьект класса для поиска циклов
+    private List<List<Cell>> cycles; //Матрица циклов
 
     public SpreadsheetGraph(int rows, int columns) {
         super(DefaultEdge.class);

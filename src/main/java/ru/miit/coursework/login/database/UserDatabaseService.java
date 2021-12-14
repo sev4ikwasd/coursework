@@ -5,8 +5,9 @@ import ru.miit.coursework.login.logic.User;
 import java.sql.*;
 
 public class UserDatabaseService implements UserDatabaseServiceInterface {
-    Connection connection;
+    Connection connection; //Обьект соединения с базой данных
 
+    //Метод получения соединения с базой данных
     @Override
     public Connection getDBConnection() throws ClassNotFoundException, SQLException {
         //Соединение открывается если оно еще не открыто
@@ -36,6 +37,7 @@ public class UserDatabaseService implements UserDatabaseServiceInterface {
         stmt.close();
     }
 
+    //Метод регистрации пользователя
     @Override
     public void signUpUser(User user) throws ClassNotFoundException, SQLException {
         String query = "INSERT INTO users(login, password_hash, salt) VALUES(?,?,?)";
@@ -48,6 +50,7 @@ public class UserDatabaseService implements UserDatabaseServiceInterface {
         preparedStatement.close();
     }
 
+    //Метод получения пользлвателя по логину
     @Override
     public User getUserByLogin(String login) throws ClassNotFoundException, SQLException {
         String query = "SELECT * FROM users WHERE login=?";

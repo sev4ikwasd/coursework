@@ -28,22 +28,23 @@ import java.util.Optional;
 
 
 public class SpreadsheetController implements EventHandler<GridChange> {
-    final private int initialRowCount = 100;
-    final private int initialColumnCount = 100;
+    final private int initialRowCount = 100; //Количество строк
+    final private int initialColumnCount = 100; //Количество рядов
     @FXML
-    SpreadsheetView spreadsheet;
+    SpreadsheetView spreadsheet; //Обьект таблицы
     @FXML
-    ColorPicker textColorPicker;
+    ColorPicker textColorPicker; //Обьект селектора цвета текста
     @FXML
-    ColorPicker backgroundColorPicker;
+    ColorPicker backgroundColorPicker; //Обьект селектора цвета фона
     @FXML
-    TextField inputTextField;
-    private GridBase grid;
-    private SpreadsheetGraph spreadsheetGraph;
-    private Tokenizer tokenizer;
-    private SpreadsheetSerializationServiceInterface spreadsheetSerializationService;
-    private boolean isChanged = false;
+    TextField inputTextField; //Обьект поля для ввода значений
+    private GridBase grid; //Обьект решетки ячеек
+    private SpreadsheetGraph spreadsheetGraph; //Обьект графа таблицы
+    private Tokenizer tokenizer; //Обьект токенизатора
+    private SpreadsheetSerializationServiceInterface spreadsheetSerializationService; //Обьект сервиса сериализации таблиц
+    private boolean isChanged = false; //Маркер изменений в таблице
 
+    //Метод инициализации
     public void initialize() {
         //Добавление проверки на созранение таблици при нажатии кнопки закрытия
         MainApplication.getPrimaryStage().setOnCloseRequest(event -> {
@@ -200,6 +201,7 @@ public class SpreadsheetController implements EventHandler<GridChange> {
 
     //Меню:
 
+    //Обработчик нажатия на кнопку "New"
     @FXML
     public void newSpreadsheetMenuEntryAction(ActionEvent event) {
         unsavedChangesAlert(event, () -> {
@@ -216,6 +218,7 @@ public class SpreadsheetController implements EventHandler<GridChange> {
         });
     }
 
+    //Обработчик нажатия на кнопку "Open"
     @FXML
     public void openSpreadsheetMenuEntryAction(ActionEvent event) {
         unsavedChangesAlert(event, () -> {
@@ -236,6 +239,7 @@ public class SpreadsheetController implements EventHandler<GridChange> {
         });
     }
 
+    //Обработчик нажатия на кнопку "Save"
     @FXML
     public void saveSpreadsheetMenuEntryAction(ActionEvent event) {
         try {
@@ -248,6 +252,7 @@ public class SpreadsheetController implements EventHandler<GridChange> {
         }
     }
 
+    //Обработчик нажатия на кнопку "Save as"
     @FXML
     public void saveAsSpreadsheetMenuEntryAction(ActionEvent event) {
         FileChooser fileChooser = new FileChooser();
@@ -267,6 +272,7 @@ public class SpreadsheetController implements EventHandler<GridChange> {
         }
     }
 
+    //Обработчик нажатия на кнопку "Print"
     @FXML
     public void printSpreadsheetMenuEntryAction(ActionEvent event) {
         //Если есть принтер по-умолчанию выбрать его, иначе выбрать первый из списка
@@ -277,6 +283,7 @@ public class SpreadsheetController implements EventHandler<GridChange> {
         job.printPage(spreadsheet);
     }
 
+    //Обработчик нажатия на кнопку "Log out"
     @FXML
     public void logOutMenuEntryAction(ActionEvent event) {
         unsavedChangesAlert(event, () -> {
@@ -291,6 +298,7 @@ public class SpreadsheetController implements EventHandler<GridChange> {
         });
     }
 
+    //Обработчик нажатия на кнопку "Exit"
     @FXML
     public void exitSpreadsheetMenuEntryAction(ActionEvent event) {
         unsavedChangesAlert(event, Platform::exit);
@@ -372,6 +380,7 @@ public class SpreadsheetController implements EventHandler<GridChange> {
 
     //Тулбары
 
+    //Обработчик изменений в селекторе цвета текста
     @FXML
     public void textColorPickerAction(ActionEvent actionEvent) {
         ObservableList<TablePosition> selectedCells = spreadsheet.getSelectionModel().getSelectedCells();
@@ -384,6 +393,7 @@ public class SpreadsheetController implements EventHandler<GridChange> {
         display();
     }
 
+    //Обработчик изменений в селекторе цвета фона
     @FXML
     public void backgroundColorPickerAction(ActionEvent actionEvent) {
         ObservableList<TablePosition> selectedCells = spreadsheet.getSelectionModel().getSelectedCells();
@@ -396,6 +406,7 @@ public class SpreadsheetController implements EventHandler<GridChange> {
         display();
     }
 
+    //Обработчик изменений в поле для ввода текста
     @FXML
     public void inputTextFieldAction(ActionEvent actionEvent) {
         String text = inputTextField.getText();

@@ -22,13 +22,14 @@ import java.util.Arrays;
 
 public class LoginController {
     @FXML
-    TextField loginField;
+    TextField loginField; //Поле логина
     @FXML
-    PasswordField passwordField;
+    PasswordField passwordField; //Поле пароля
 
-    private UserDatabaseServiceInterface userDatabaseService;
-    private SecretKeyFactory factory;
+    private UserDatabaseServiceInterface userDatabaseService; //Обьект сервиса по работе с базой данных пользователей
+    private SecretKeyFactory factory; //Обьект класса-фабрики криптографических классов
 
+    //Метод инициализации
     public void initialize() {
         userDatabaseService = new UserDatabaseService();
         try {
@@ -38,6 +39,7 @@ public class LoginController {
         }
     }
 
+    //Обработчик нажатия на кнопку входа
     @FXML
     public void loginButtonAction(ActionEvent event) {
         if (!loginField.getText().isEmpty() && !passwordField.getText().isEmpty()) {
@@ -70,6 +72,7 @@ public class LoginController {
         }
     }
 
+    //Обработчик нажатия на кнопку регистрации
     @FXML
     public void registerButtonAction(ActionEvent event) {
         //Переход в окно регистрации

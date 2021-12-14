@@ -1,9 +1,9 @@
 package ru.miit.coursework.login.logic;
 
 public class User {
-    private String login;
-    private byte[] passwordHash;
-    private byte[] salt;
+    private String login; //Логин
+    private byte[] passwordHash; //Хэш пароля
+    private byte[] salt; //Соль хэша пароля
 
     public User() {
     }
