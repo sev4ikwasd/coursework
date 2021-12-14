@@ -23,7 +23,7 @@
           <execution>
             <id>default-cli</id>
             <configuration>
-              <mainClass>ru.miit.coursework/ru.miit.coursework.MainApplication</mainClass>
+              <mainClass>ru.miit.coursework/ru.miit.coursework.FXAppLauncher</mainClass>
               <options>
                 <option>--add-exports</option>
                 <option>javafx.base/com.sun.javafx.event=org.controlsfx.controls</option>
