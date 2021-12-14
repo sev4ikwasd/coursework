@@ -1,12 +1,12 @@
 package ru.miit.coursework.spreadsheet.logic;
 
 public class Cell {
-    private int x, y;
-    private String backgroundColor, textColor;
-    private Object value;
-    private boolean isEvaluable;
-    private String formula;
-    private boolean isString;
+    private int x, y; //Координаты ячейки
+    private String backgroundColor, textColor; //Цвет фона и текста
+    private Object value; //Значение хранящееся в ячейке
+    private boolean isEvaluable; //Маркер вычислимости значения ячейки
+    private String formula; //Формула ячейки
+    private boolean isString; //Маркер того хранит ли ячейка строку
 
     public Cell(int x, int y, String backgroundColor, String textColor, Object value, boolean isEvaluable, String formula, boolean isString) {
         this.x = x;
@@ -86,9 +86,12 @@ public class Cell {
         isString = string;
     }
 
+    //Метод для получения координат в виде строки для ячейки
     public String getStringCoordinates() {
+        //Получение строки ячейки
         String rowString = String.valueOf(x + 1);
 
+        //Получение колонки ячейки
         StringBuilder sb = new StringBuilder();
         int tempY = y + 1;
         while (tempY-- > 0) {
@@ -97,6 +100,7 @@ public class Cell {
         }
         String columnString = sb.reverse().toString();
 
+        //Сложение колонки и строки
         return columnString + rowString;
     }
 

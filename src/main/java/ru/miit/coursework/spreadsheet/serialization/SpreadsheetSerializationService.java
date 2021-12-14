@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SpreadsheetSerializationService implements SpreadsheetSerializationServiceInterface {
-    private File currentSaveFile;
+    private File currentSaveFile; //Обьект текущего файла для сохранения
 
     //Метод, пытающийся сохранить таблицу в файл, если он уже создан
     @Override
@@ -23,6 +23,7 @@ public class SpreadsheetSerializationService implements SpreadsheetSerialization
         }
     }
 
+    //Метод сохранения таблицы
     @Override
     public void saveSpreadsheet(File file, SpreadsheetGraph spreadsheet) throws FileNotFoundException {
         XMLEncoder encoder = new XMLEncoder(new BufferedOutputStream(new FileOutputStream(file)));
@@ -32,6 +33,7 @@ public class SpreadsheetSerializationService implements SpreadsheetSerialization
         currentSaveFile = file;
     }
 
+    //Метод открытия таблицы
     @Override
     public SpreadsheetGraph openSpreadsheet(File file) throws FileNotFoundException {
         XMLDecoder encoder = new XMLDecoder(new BufferedInputStream(new FileInputStream(file)));

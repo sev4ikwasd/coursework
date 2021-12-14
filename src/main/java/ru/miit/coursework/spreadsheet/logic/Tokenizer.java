@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 
 public class Tokenizer {
 
-    private Pattern mTokenPatterns;
+    private Pattern mTokenPatterns; //Регулярные выражения
 
     public Tokenizer() {
         StringBuilder tokenPatternsBuilder = new StringBuilder();
